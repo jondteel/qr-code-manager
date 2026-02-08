@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  qrCodes   QRCode[]
+  shortUrls ShortUrl[]
+}
+
+model QRCode {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  data        String   // The actual data/URL encoded in QR
+  size        Int      @default(300)
+  fgColor     String   @default("#000000")
+  bgColor     String   @default("#FFFFFF")
+  errorLevel  String   @default("M") // L, M, Q, H
+  imageUrl    String?  // URL to the generated QR image
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  shortUrlId  String?  @unique
+  shortUrl    ShortUrl? @relation(fields: [shortUrlId], references: [id])
+  
+  analytics   Analytics[]
+}
+
+model ShortUrl {
+  id          String   @id @default(uuid())
+  shortCode   String   @unique
+  originalUrl String
+  createdAt   DateTime @default(now())
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  qrCode      QRCode?
+  analytics   Analytics[]
+}
+
+model Analytics {
+  id        String   @id @default(uuid())
+  timestamp DateTime @default(now())
+  userAgent String?
+  ipAddress String?
+  
+  qrCodeId  String?
+  qrCode    QRCode?  @relation(fields: [qrCodeId], references: [id], onDelete: Cascade)
+  
+  shortUrlId String?
+  shortUrl   ShortUrl? @relation(fields: [shortUrlId], references: [id], onDelete: Cascade)
+}
