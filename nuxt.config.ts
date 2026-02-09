@@ -1,5 +1,12 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
+// nuxt.config.ts
+// https://nuxt.com/modules/tailwindcss
 export default defineNuxtConfig({
-  compatibilityDate: '2025-07-15',
+  modules: ['@nuxtjs/tailwindcss', '@nuxtjs/supabase'],
+  // @ts-ignore
+  supabase: {
+    redirect: false
+  },
+  
+  compatibilityDate: '2024-11-01',
   devtools: { enabled: true }
 })
