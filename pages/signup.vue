@@ -5,14 +5,18 @@
       
       <form @submit.prevent="handleSignup" class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Name</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
           <input 
-            v-model="name" 
+            v-model="username" 
             type="text" 
             required
+            minlength="3"
+            maxlength="20"
+            pattern="[a-zA-Z0-9_]+"
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="John Doe"
+            placeholder="johndoe123"
           />
+          <p class="text-xs text-gray-500 mt-1">3-20 characters, letters, numbers, and underscores only</p>
         </div>
         
         <div>
@@ -60,10 +64,9 @@
 </template>
 
 <script setup>
-const supabase = useSupabaseClient()
 const router = useRouter()
 
-const name = ref('')
+const username = ref('')
 const email = ref('')
 const password = ref('')
 const error = ref('')
@@ -74,25 +77,28 @@ const handleSignup = async () => {
     error.value = ''
     success.value = ''
     
-    const { data, error: signupError } = await supabase.auth.signUp({
-      email: email.value,
-      password: password.value,
-      options: {
-        data: {
-          name: name.value
-        }
+    console.log('Sending signup request...', { username: username.value, email: email.value })
+    
+    const response = await $fetch('/api/auth/signup', {
+      method: 'POST',
+      body: {
+        email: email.value,
+        username: username.value,
+        password: password.value,
       }
     })
     
-    if (signupError) {
-      error.value = signupError.message
+    console.log('Response:', response)
+    
+    if (response.error) {
+      error.value = response.error
     } else {
-      success.value = 'Account created! Check your email to verify.'
-      // Optionally redirect after a delay
+      success.value = response.message
       setTimeout(() => router.push('/login'), 2000)
     }
   } catch (err) {
-    error.value = 'An error occurred during signup'
+    console.error('Signup error:', err)
+    error.value = err.data?.error || err.message || 'An error occurred during signup'
   }
 }
 </script>
