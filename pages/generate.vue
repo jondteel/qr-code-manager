@@ -36,8 +36,11 @@
           </div>
 
           <div class="flex items-center gap-4">
-            <span class="text-sm text-gray-600">testuser123</span>
-            <button class="text-gray-600 hover:text-gray-900 text-sm font-medium">
+            <span class="text-sm text-gray-600">{{ user?.email || "Guest" }}</span>
+            <button
+              @click="signOut"
+              class="text-gray-600 hover:text-gray-900 text-sm font-medium"
+            >
               Sign Out
             </button>
           </div>
@@ -265,6 +268,15 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
+
+const supabase = useSupabaseClient()
+const user = useSupabaseUser()
+const router = useRouter()
+
+const signOut = async () => {
+  await supabase.auth.signOut()
+  router.push('/login')
+}
 
 type QRCreateResponse = {
   success?: boolean;

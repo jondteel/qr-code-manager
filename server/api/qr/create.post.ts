@@ -21,9 +21,10 @@ export default defineEventHandler(async (event) => {
   try {
     // Check authentication
     const user = await serverSupabaseUser(event)
-    if (!user) {
+
+    if (!user || !user.sub) {
       return {
-        error: 'Unauthorized',
+        error: 'Unauthorized - Please log in',
         statusCode: 401
       }
     }
@@ -42,7 +43,7 @@ export default defineEventHandler(async (event) => {
         fgColor: validatedData.fgColor,
         bgColor: validatedData.bgColor,
         errorLevel: validatedData.errorLevel,
-        userId: user.id,
+        userId: user.sub, // Changed from user.id to user.sub
       }
     })
 
@@ -51,12 +52,12 @@ export default defineEventHandler(async (event) => {
     if (validatedData.createShortUrl) {
       // Generate unique short code
       const shortCode = await generateUniqueShortCode()
-      
+
       shortUrl = await prisma.shortUrl.create({
         data: {
           shortCode,
           originalUrl: validatedData.data,
-          userId: user.id,
+          userId: user.sub, // Changed from user.id to user.sub
         }
       })
 
@@ -73,7 +74,6 @@ export default defineEventHandler(async (event) => {
       shortUrl,
       statusCode: 201
     }
-
   } catch (error: any) {
     if (error instanceof z.ZodError) {
       return {
@@ -94,22 +94,22 @@ export default defineEventHandler(async (event) => {
 // Generate unique short code with collision prevention
 async function generateUniqueShortCode(): Promise<string> {
   const maxAttempts = 10
-  
+
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const code = nanoid(8) // 8 chars, URL-safe
-    
+
     // Check if this code already exists
     const existing = await prisma.shortUrl.findUnique({
       where: { shortCode: code }
     })
-    
+
     if (!existing) {
       return code // Found a unique one!
     }
-    
+
     // If we somehow get a collision (extremely rare), try again
     console.warn(`Short code collision detected on attempt ${attempt + 1}`)
   }
-  
+
   throw new Error('Failed to generate unique short code after multiple attempts')
 }

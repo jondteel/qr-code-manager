@@ -37,8 +37,11 @@
           </div>
 
           <div class="flex items-center gap-4">
-            <span class="text-sm text-gray-600">testuser123</span>
-            <button class="text-gray-600 hover:text-gray-900 text-sm font-medium">
+            <span class="text-sm text-gray-600">{{ user?.email || "Guest" }}</span>
+            <button
+              @click="signOut"
+              class="text-gray-600 hover:text-gray-900 text-sm font-medium"
+            >
               Sign Out
             </button>
           </div>
@@ -54,7 +57,7 @@
           <div class="flex items-center justify-between gap-4">
             <div>
               <p class="text-sm text-gray-600 mb-1">Total QR Codes</p>
-              <p class="text-3xl font-bold text-gray-900">24</p>
+              <p class="text-3xl font-bold text-gray-900">{{ stats.totalQRCodes }}</p>
             </div>
             <div
               class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center"
@@ -80,7 +83,7 @@
           <div class="flex items-center justify-between gap-4">
             <div>
               <p class="text-sm text-gray-600 mb-1">Short URLs</p>
-              <p class="text-3xl font-bold text-gray-900">18</p>
+              <p class="text-3xl font-bold text-gray-900">{{ stats.totalShortUrls }}</p>
             </div>
             <div
               class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center"
@@ -106,7 +109,7 @@
           <div class="flex items-center justify-between gap-4">
             <div>
               <p class="text-sm text-gray-600 mb-1">Total Scans</p>
-              <p class="text-3xl font-bold text-gray-900">1,248</p>
+              <p class="text-3xl font-bold text-gray-900">{{ stats.totalScans }}</p>
             </div>
             <div
               class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center"
@@ -138,7 +141,7 @@
           <div class="flex items-center justify-between gap-4">
             <div>
               <p class="text-sm text-gray-600 mb-1">This Month</p>
-              <p class="text-3xl font-bold text-gray-900">342</p>
+              <p class="text-3xl font-bold text-gray-900">{{ stats.thisMonthScans }}</p>
             </div>
             <div
               class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center"
@@ -181,16 +184,22 @@
       </div>
 
       <!-- QR Codes Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- Sample QR Code Card 1 -->
+      <div
+        v-if="qrCodes.length > 0"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      >
         <div
+          v-for="qr in qrCodes"
+          :key="qr.id"
           class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition"
         >
           <div class="p-6">
             <div class="flex items-start justify-between mb-4">
               <div class="flex-1">
-                <h3 class="font-semibold text-gray-900 mb-1">Website Homepage</h3>
-                <p class="text-sm text-gray-500">https://mywebsite.com</p>
+                <h3 class="font-semibold text-gray-900 mb-1">{{ qr.title }}</h3>
+                <p class="text-sm text-gray-500 truncate">
+                  {{ qr.data }}
+                </p>
               </div>
               <button class="text-gray-400 hover:text-gray-600">
                 <svg
@@ -210,118 +219,19 @@
             </div>
 
             <div class="bg-gray-50 rounded-lg p-4 mb-4 flex items-center justify-center">
-              <div class="w-32 h-32 bg-white border-4 border-gray-900 rounded"></div>
+              <ClientOnly>
+                <canvas :ref="`canvas-${qr.id}`" class="bg-white rounded"></canvas>
+              </ClientOnly>
             </div>
 
             <div class="flex items-center justify-between text-sm text-gray-600 mb-4">
-              <span>247 scans</span>
-              <span>Created Feb 8</span>
+              <span>{{ qr.analytics?.length || 0 }} scans</span>
+              <span>Created {{ formatDate(qr.createdAt) }}</span>
             </div>
 
             <div class="flex gap-2">
               <button
-                class="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition text-sm font-medium"
-              >
-                Download
-              </button>
-              <button
-                class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition text-sm font-medium"
-              >
-                View Stats
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Sample QR Code Card 2 -->
-        <div
-          class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition"
-        >
-          <div class="p-6">
-            <div class="flex items-start justify-between mb-4">
-              <div class="flex-1">
-                <h3 class="font-semibold text-gray-900 mb-1">Product Page</h3>
-                <p class="text-sm text-gray-500">Short: qr.link/abc123</p>
-              </div>
-              <button class="text-gray-400 hover:text-gray-600">
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <div class="bg-gray-50 rounded-lg p-4 mb-4 flex items-center justify-center">
-              <div class="w-32 h-32 bg-white border-4 border-blue-600 rounded"></div>
-            </div>
-
-            <div class="flex items-center justify-between text-sm text-gray-600 mb-4">
-              <span>89 scans</span>
-              <span>Created Feb 7</span>
-            </div>
-
-            <div class="flex gap-2">
-              <button
-                class="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition text-sm font-medium"
-              >
-                Download
-              </button>
-              <button
-                class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition text-sm font-medium"
-              >
-                View Stats
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Sample QR Code Card 3 -->
-        <div
-          class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition"
-        >
-          <div class="p-6">
-            <div class="flex items-start justify-between mb-4">
-              <div class="flex-1">
-                <h3 class="font-semibold text-gray-900 mb-1">Contact Card</h3>
-                <p class="text-sm text-gray-500">vCard format</p>
-              </div>
-              <button class="text-gray-400 hover:text-gray-600">
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <div class="bg-gray-50 rounded-lg p-4 mb-4 flex items-center justify-center">
-              <div class="w-32 h-32 bg-white border-4 border-purple-600 rounded"></div>
-            </div>
-
-            <div class="flex items-center justify-between text-sm text-gray-600 mb-4">
-              <span>156 scans</span>
-              <span>Created Feb 5</span>
-            </div>
-
-            <div class="flex gap-2">
-              <button
+                @click="downloadQR(qr)"
                 class="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition text-sm font-medium"
               >
                 Download
@@ -335,6 +245,129 @@
           </div>
         </div>
       </div>
+
+      <!-- Empty state -->
+      <div v-else class="text-center py-12">
+        <svg
+          class="mx-auto h-12 w-12 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+          />
+        </svg>
+        <h3 class="mt-2 text-sm font-semibold text-gray-900">No QR codes yet</h3>
+        <p class="mt-1 text-sm text-gray-500">
+          Get started by creating your first QR code.
+        </p>
+        <div class="mt-6">
+          <NuxtLink
+            to="/generate"
+            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+          >
+            Create QR Code
+          </NuxtLink>
+        </div>
+      </div>
     </main>
   </div>
 </template>
+<script setup>
+import { nextTick } from 'vue'
+const supabase = useSupabaseClient();
+const user = useSupabaseUser();
+const router = useRouter();
+
+// Fetch QR codes data
+const { data: qrData, pending, error, refresh } = await useFetch("/api/qr/list");
+
+const stats = computed(
+  () =>
+    qrData.value?.stats || {
+      totalQRCodes: 0,
+      totalShortUrls: 0,
+      totalScans: 0,
+      thisMonthScans: 0,
+    }
+);
+
+const qrCodes = computed(() => qrData.value?.qrCodes || []);
+
+const signOut = async () => {
+  await supabase.auth.signOut();
+  router.push("/login");
+};
+
+// Import QRCode library
+let QRCodeLib = null;
+
+// Format date helper
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+};
+
+// Generate QR codes for display
+onMounted(async () => {
+  if (qrCodes.value.length > 0) {
+    // Dynamically import QR library
+    const mod = await import("qrcode");
+    QRCodeLib = mod.default ?? mod;
+
+    // Wait for DOM to be ready
+    await nextTick();
+
+    // Generate QR for each code
+    const canvases = document.querySelectorAll('canvas');
+    canvases.forEach(async (canvas, index) => {
+      const qr = qrCodes.value[index];
+      if (canvas && QRCodeLib && qr) {
+        const url = qr.shortUrl
+          ? `${window.location.origin}/s/${qr.shortUrl.shortCode}`
+          : qr.data;
+
+        await QRCodeLib.toCanvas(canvas, url, {
+          width: 128,
+          margin: 1,
+          errorCorrectionLevel: qr.errorLevel,
+          color: {
+            dark: qr.fgColor,
+            light: qr.bgColor,
+          },
+        });
+      }
+    });
+  }
+});
+
+// Download function
+const downloadQR = async (qr) => {
+  if (!QRCodeLib) return;
+
+  const canvas = document.createElement("canvas");
+  const url = qr.shortUrl
+    ? `${window.location.origin}/s/${qr.shortUrl.shortCode}`
+    : qr.data;
+
+  await QRCodeLib.toCanvas(canvas, url, {
+    width: qr.size,
+    margin: 2,
+    errorCorrectionLevel: qr.errorLevel,
+    color: {
+      dark: qr.fgColor,
+      light: qr.bgColor,
+    },
+  });
+
+  const dataUrl = canvas.toDataURL("image/png");
+  const a = document.createElement("a");
+  a.href = dataUrl;
+  a.download = `${qr.title.replace(/[^\w\-]+/g, "_")}.png`;
+  a.click();
+};
+</script>
