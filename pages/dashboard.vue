@@ -22,7 +22,7 @@
               <span class="ml-2 text-xl font-bold text-gray-900">QR Manager</span>
             </NuxtLink>
 
-            <!-- ✅ FIXED: add spacing between individual links -->
+            <!-- ✅ spaced links -->
             <div class="hidden md:flex items-center whitespace-nowrap">
               <NuxtLink to="/dashboard" class="text-blue-600 font-medium mr-8"
                 >Dashboard</NuxtLink
@@ -59,21 +59,10 @@
               <p class="text-sm text-gray-600 mb-1">Total QR Codes</p>
               <p class="text-3xl font-bold text-gray-900">{{ stats.totalQRCodes }}</p>
             </div>
-            <div
-              class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center"
-            >
-              <svg
-                class="w-6 h-6 text-blue-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
-                />
+            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
               </svg>
             </div>
           </div>
@@ -85,21 +74,10 @@
               <p class="text-sm text-gray-600 mb-1">Short URLs</p>
               <p class="text-3xl font-bold text-gray-900">{{ stats.totalShortUrls }}</p>
             </div>
-            <div
-              class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center"
-            >
-              <svg
-                class="w-6 h-6 text-indigo-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-                />
+            <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
               </svg>
             </div>
           </div>
@@ -111,27 +89,11 @@
               <p class="text-sm text-gray-600 mb-1">Total Scans</p>
               <p class="text-3xl font-bold text-gray-900">{{ stats.totalScans }}</p>
             </div>
-            <div
-              class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center"
-            >
-              <svg
-                class="w-6 h-6 text-purple-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                />
+            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               </svg>
             </div>
           </div>
@@ -143,21 +105,10 @@
               <p class="text-sm text-gray-600 mb-1">This Month</p>
               <p class="text-3xl font-bold text-gray-900">{{ stats.thisMonthScans }}</p>
             </div>
-            <div
-              class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center"
-            >
-              <svg
-                class="w-6 h-6 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                />
+            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
             </div>
           </div>
@@ -172,12 +123,7 @@
           class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center gap-2"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 4v16m8-8H4"
-            />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
           Create New QR Code
         </NuxtLink>
@@ -201,26 +147,41 @@
                   {{ qr.data }}
                 </p>
               </div>
-              <button class="text-gray-400 hover:text-gray-600">
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+
+              <!-- Menu wrapper gets a data attr so click-outside can detect properly -->
+              <div class="relative" data-menu-root>
+                <button @click.stop="toggleMenu(qr.id)" class="text-gray-400 hover:text-gray-600">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                  </svg>
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div
+                  v-if="openMenuId === qr.id"
+                  class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10"
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                  />
-                </svg>
-              </button>
+                  <button
+                    @click="editQR(qr)"
+                    class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-t-lg"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    @click="confirmDelete(qr)"
+                    class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-b-lg"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div class="bg-gray-50 rounded-lg p-4 mb-4 flex items-center justify-center">
               <ClientOnly>
-                <canvas :ref="`canvas-${qr.id}`" class="bg-white rounded"></canvas>
+                <!-- ✅ FIXED: real ref mapping by id (no querySelectorAll / no index assumptions) -->
+                <canvas :ref="(el) => setCanvasRef(qr.id, el)" class="bg-white rounded"></canvas>
               </ClientOnly>
             </div>
 
@@ -248,23 +209,12 @@
 
       <!-- Empty state -->
       <div v-else class="text-center py-12">
-        <svg
-          class="mx-auto h-12 w-12 text-gray-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
-          />
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
         </svg>
         <h3 class="mt-2 text-sm font-semibold text-gray-900">No QR codes yet</h3>
-        <p class="mt-1 text-sm text-gray-500">
-          Get started by creating your first QR code.
-        </p>
+        <p class="mt-1 text-sm text-gray-500">Get started by creating your first QR code.</p>
         <div class="mt-6">
           <NuxtLink
             to="/generate"
@@ -275,10 +225,32 @@
         </div>
       </div>
     </main>
+
+    <!-- Confirm Delete Modal -->
+    <ConfirmModal
+      :show="showDeleteModal"
+      title="Delete QR Code"
+      :message="`Are you sure you want to delete '${qrToDelete?.title}'? This action cannot be undone.`"
+      confirmText="Delete"
+      cancelText="Cancel"
+      type="danger"
+      @confirm="handleDeleteConfirm"
+      @cancel="showDeleteModal = false"
+    />
+
+    <!-- Toast Notifications -->
+    <Toast
+      :show="toast.show"
+      :message="toast.message"
+      :type="toast.type"
+      @close="toast.show = false"
+    />
   </div>
 </template>
+
 <script setup>
-import { nextTick } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
 const router = useRouter();
@@ -306,48 +278,71 @@ const signOut = async () => {
 // Import QRCode library
 let QRCodeLib = null;
 
+// ✅ FIXED: map canvas elements by QR id
+const canvasMap = ref({}); // { [qrId]: HTMLCanvasElement }
+const setCanvasRef = (id, el) => {
+  if (el) canvasMap.value[id] = el;
+};
+
 // Format date helper
 const formatDate = (dateString) => {
   const date = new Date(dateString);
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 };
 
-// Generate QR codes for display
-onMounted(async () => {
-  if (qrCodes.value.length > 0) {
-    // Dynamically import QR library
-    const mod = await import("qrcode");
-    QRCodeLib = mod.default ?? mod;
+const loadQrLib = async () => {
+  if (QRCodeLib) return QRCodeLib;
+  const mod = await import("qrcode");
+  QRCodeLib = mod.default ?? mod;
+  return QRCodeLib;
+};
 
-    // Wait for DOM to be ready
-    await nextTick();
+const renderAllQrs = async () => {
+  if (!qrCodes.value.length) return;
 
-    // Generate QR for each code
-    const canvases = document.querySelectorAll('canvas');
-    canvases.forEach(async (canvas, index) => {
-      const qr = qrCodes.value[index];
-      if (canvas && QRCodeLib && qr) {
-        const url = qr.shortUrl
-          ? `${window.location.origin}/s/${qr.shortUrl.shortCode}`
-          : qr.data;
+  await loadQrLib();
+  await nextTick();
 
-        await QRCodeLib.toCanvas(canvas, url, {
-          width: 128,
-          margin: 1,
-          errorCorrectionLevel: qr.errorLevel,
-          color: {
-            dark: qr.fgColor,
-            light: qr.bgColor,
-          },
-        });
-      }
+  for (const qr of qrCodes.value) {
+    const canvas = canvasMap.value[qr.id];
+    if (!canvas) continue;
+
+    const url = qr.shortUrl
+      ? `${window.location.origin}/s/${qr.shortUrl.shortCode}`
+      : qr.data;
+
+    await QRCodeLib.toCanvas(canvas, url, {
+      width: 128,
+      margin: 1,
+      errorCorrectionLevel: qr.errorLevel,
+      color: {
+        dark: qr.fgColor,
+        light: qr.bgColor,
+      },
     });
   }
+};
+
+onMounted(async () => {
+  await renderAllQrs();
 });
+
+// ✅ Re-render any time the list changes (after refresh/delete/create)
+watch(
+  () => qrCodes.value.map((q) => q.id).join(","),
+  async () => {
+    // remove canvases for deleted items to prevent stale refs
+    const ids = new Set(qrCodes.value.map((q) => q.id));
+    for (const key of Object.keys(canvasMap.value)) {
+      if (!ids.has(key)) delete canvasMap.value[key];
+    }
+    await renderAllQrs();
+  }
+);
 
 // Download function
 const downloadQR = async (qr) => {
-  if (!QRCodeLib) return;
+  await loadQrLib();
 
   const canvas = document.createElement("canvas");
   const url = qr.shortUrl
@@ -369,5 +364,72 @@ const downloadQR = async (qr) => {
   a.href = dataUrl;
   a.download = `${qr.title.replace(/[^\w\-]+/g, "_")}.png`;
   a.click();
+};
+
+// Menu state
+const openMenuId = ref(null);
+
+const toggleMenu = (id) => {
+  openMenuId.value = openMenuId.value === id ? null : id;
+};
+
+// ✅ FIXED: click-outside detection + cleanup listener
+const onDocClick = (e) => {
+  // if click happened inside a menu root, ignore
+  const target = e.target;
+  if (target && target.closest && target.closest("[data-menu-root]")) return;
+  openMenuId.value = null;
+};
+
+onMounted(() => {
+  document.addEventListener("click", onDocClick);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener("click", onDocClick);
+});
+
+// Modal state
+const showDeleteModal = ref(false);
+const qrToDelete = ref(null);
+
+// Toast state
+const toast = ref({
+  show: false,
+  message: "",
+  type: "info",
+});
+
+// Show toast helper
+const showToast = (message, type = "info") => {
+  toast.value = { show: true, message, type };
+};
+
+const confirmDelete = (qr) => {
+  qrToDelete.value = qr;
+  showDeleteModal.value = true;
+  openMenuId.value = null;
+};
+
+// Handle delete confirmation (already updated for best-practice API errors)
+const handleDeleteConfirm = async () => {
+  showDeleteModal.value = false;
+
+  try {
+    await $fetch(`/api/qr/${qrToDelete.value.id}`, { method: "DELETE" });
+    await refresh();
+    showToast("QR code deleted successfully", "success");
+  } catch (err) {
+    console.error("Delete error:", err);
+    showToast("Failed to delete QR code", "error");
+  } finally {
+    qrToDelete.value = null;
+  }
+};
+
+// Edit function
+const editQR = (qr) => {
+  router.push(`/edit/${qr.id}`);
+  openMenuId.value = null;
 };
 </script>
