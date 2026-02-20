@@ -1,3 +1,4 @@
+<!-- [id].vue - Edit QR Code Page -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header/Navigation -->
@@ -6,22 +7,41 @@
         <div class="flex justify-between items-center h-16">
           <div class="flex items-center gap-8">
             <NuxtLink to="/" class="flex items-center">
-              <svg class="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+              <svg
+                class="h-8 w-8 text-blue-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+                />
               </svg>
               <span class="ml-2 text-xl font-bold text-gray-900">QR Manager</span>
             </NuxtLink>
 
             <div class="hidden md:flex items-center gap-x-8 whitespace-nowrap">
-              <NuxtLink to="/dashboard" class="text-gray-600 hover:text-gray-900">Dashboard</NuxtLink>
-              <NuxtLink to="/generate" class="text-gray-600 hover:text-gray-900">Generate QR</NuxtLink>
-              <NuxtLink to="/analytics" class="text-gray-600 hover:text-gray-900">Analytics</NuxtLink>
+              <NuxtLink to="/dashboard" class="text-gray-600 hover:text-gray-900"
+                >Dashboard</NuxtLink
+              >
+              <NuxtLink to="/generate" class="text-gray-600 hover:text-gray-900"
+                >Generate QR</NuxtLink
+              >
+              <NuxtLink to="/analytics" class="text-gray-600 hover:text-gray-900"
+                >Analytics</NuxtLink
+              >
             </div>
           </div>
 
           <div class="flex items-center gap-4">
-            <span class="text-sm text-gray-600">{{ user?.email || 'Guest' }}</span>
-            <button @click="signOut" class="text-gray-600 hover:text-gray-900 text-sm font-medium">
+            <span class="text-sm text-gray-600">{{ user?.email || "Guest" }}</span>
+            <button
+              @click="signOut"
+              class="text-gray-600 hover:text-gray-900 text-sm font-medium"
+            >
               Sign Out
             </button>
           </div>
@@ -32,7 +52,10 @@
     <!-- Main -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div class="mb-6">
-        <NuxtLink to="/dashboard" class="text-blue-600 hover:text-blue-700 text-sm flex items-center gap-1 mb-4">
+        <NuxtLink
+          to="/dashboard"
+          class="text-blue-600 hover:text-blue-700 text-sm flex items-center gap-1 mb-4"
+        >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
@@ -46,14 +69,18 @@
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
       </div>
 
-      <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
+      <div
+        v-else-if="error"
+        class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800"
+      >
         {{ error }}
       </div>
 
       <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Form -->
         <section class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div class="space-y-6">
+          <!-- ✅ Use a real form so Enter submits + native UX -->
+          <form class="space-y-6" @submit.prevent="saveChanges">
             <!-- Title -->
             <div>
               <label class="block text-sm font-medium text-gray-900 mb-1">Title *</label>
@@ -79,7 +106,9 @@
 
             <!-- Description -->
             <div>
-              <label class="block text-sm font-medium text-gray-900 mb-1">Description (optional)</label>
+              <label class="block text-sm font-medium text-gray-900 mb-1"
+                >Description (optional)</label
+              >
               <textarea
                 v-model="form.description"
                 rows="3"
@@ -108,7 +137,11 @@
               <div>
                 <label class="block text-sm font-medium text-gray-900 mb-1">Foreground</label>
                 <div class="flex items-center gap-3">
-                  <input v-model="form.fgColor" type="color" class="h-10 w-14 p-1 rounded border border-gray-300" />
+                  <input
+                    v-model="form.fgColor"
+                    type="color"
+                    class="h-10 w-14 p-1 rounded border border-gray-300"
+                  />
                   <input
                     v-model="form.fgColor"
                     type="text"
@@ -120,7 +153,11 @@
               <div>
                 <label class="block text-sm font-medium text-gray-900 mb-1">Background</label>
                 <div class="flex items-center gap-3">
-                  <input v-model="form.bgColor" type="color" class="h-10 w-14 p-1 rounded border border-gray-300" />
+                  <input
+                    v-model="form.bgColor"
+                    type="color"
+                    class="h-10 w-14 p-1 rounded border border-gray-300"
+                  />
                   <input
                     v-model="form.bgColor"
                     type="text"
@@ -147,11 +184,11 @@
             <!-- Actions -->
             <div class="flex gap-3">
               <button
-                @click="saveChanges"
+                type="submit"
                 :disabled="saving"
                 class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
               >
-                {{ saving ? 'Saving...' : 'Save Changes' }}
+                {{ saving ? "Saving..." : "Save Changes" }}
               </button>
               <NuxtLink
                 to="/dashboard"
@@ -163,15 +200,17 @@
 
             <p v-if="saveError" class="text-sm text-red-600">{{ saveError }}</p>
             <p v-if="saveSuccess" class="text-sm text-green-600">Changes saved successfully!</p>
-          </div>
+          </form>
         </section>
 
         <!-- Preview -->
         <section class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h2 class="text-lg font-semibold text-gray-900 mb-4">Preview</h2>
-          
+
           <ClientOnly>
-            <div class="rounded-lg border border-gray-200 bg-gray-50 p-6 flex items-center justify-center">
+            <div
+              class="rounded-lg border border-gray-200 bg-gray-50 p-6 flex items-center justify-center"
+            >
               <canvas ref="canvasRef" class="bg-white rounded"></canvas>
             </div>
           </ClientOnly>
@@ -200,69 +239,100 @@
 </template>
 
 <script setup>
-const route = useRoute()
-const router = useRouter()
-const supabase = useSupabaseClient()
-const user = useSupabaseUser()
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+
+const route = useRoute();
+const router = useRouter();
+const supabase = useSupabaseClient();
+const user = useSupabaseUser();
 
 const signOut = async () => {
-  await supabase.auth.signOut()
-  router.push('/login')
-}
+  await supabase.auth.signOut();
+  router.push("/login");
+};
 
-const id = route.params.id
+// ✅ Make id reactive so client-side route changes refetch correctly
+const id = computed(() => String(route.params.id ?? ""));
 
-// Fetch QR code data
-const { data: qrData, pending: loading, error: fetchError } = await useFetch(`/api/qr/${id}`)
+// ✅ useFetch with a function so it reacts to id changes
+const {
+  data: qrData,
+  pending: loading,
+  error: fetchError,
+  refresh,
+} = await useFetch(() => `/api/qr/${id.value}`);
 
-const qrCode = computed(() => qrData.value?.qrCode || {})
-const error = computed(() => fetchError.value?.message || qrData.value?.error)
+const qrCode = computed(() => qrData.value?.qrCode || {});
+const error = computed(() => fetchError.value?.message || qrData.value?.error);
 
 // Form state
 const form = ref({
-  title: '',
-  description: '',
+  title: "",
+  description: "",
   size: 320,
-  fgColor: '#000000',
-  bgColor: '#ffffff',
-  errorLevel: 'M'
-})
+  fgColor: "#000000",
+  bgColor: "#ffffff",
+  errorLevel: "M",
+});
 
 // Populate form when data loads
-watch(qrCode, (newQR) => {
-  if (newQR && newQR.id) {
-    form.value = {
-      title: newQR.title,
-      description: newQR.description || '',
-      size: newQR.size,
-      fgColor: newQR.fgColor,
-      bgColor: newQR.bgColor,
-      errorLevel: newQR.errorLevel
+watch(
+  qrCode,
+  (newQR) => {
+    if (newQR && newQR.id) {
+      form.value = {
+        title: newQR.title ?? "",
+        description: newQR.description || "",
+        size: newQR.size ?? 320,
+        fgColor: newQR.fgColor ?? "#000000",
+        bgColor: newQR.bgColor ?? "#ffffff",
+        errorLevel: newQR.errorLevel ?? "M",
+      };
     }
-  }
-}, { immediate: true })
+  },
+  { immediate: true }
+);
 
 // Save state
-const saving = ref(false)
-const saveError = ref('')
-const saveSuccess = ref(false)
+const saving = ref(false);
+const saveError = ref("");
+const saveSuccess = ref(false);
 
-// QR Code library
-const canvasRef = ref(null)
-let QRCodeLib = null
+// QR Code library + canvas ref
+const canvasRef = ref(null);
+let QRCodeLib = null;
 
-// Render QR preview
-const renderPreview = async () => {
-  if (!canvasRef.value || !qrCode.value.id) return
+const loadQrLib = async () => {
+  if (QRCodeLib) return QRCodeLib;
+  const mod = await import("qrcode");
+  QRCodeLib = mod.default ?? mod;
+  return QRCodeLib;
+};
 
-  if (!QRCodeLib) {
-    const mod = await import('qrcode')
-    QRCodeLib = mod.default ?? mod
+// ✅ Debounced preview rendering
+let previewTimer = null;
+const DEBOUNCE_MS = 200;
+
+const clearPreviewTimer = () => {
+  if (previewTimer) {
+    clearTimeout(previewTimer);
+    previewTimer = null;
   }
+};
+
+const renderPreviewNow = async () => {
+  if (!canvasRef.value) return;
+  if (!qrCode.value?.id) return;
+
+  await loadQrLib();
+  await nextTick();
+
+  // Guard again after await (route could have changed)
+  if (!canvasRef.value || !qrCode.value?.id) return;
 
   const url = qrCode.value.shortUrl
     ? `${window.location.origin}/s/${qrCode.value.shortUrl.shortCode}`
-    : qrCode.value.data
+    : qrCode.value.data;
 
   await QRCodeLib.toCanvas(canvasRef.value, url, {
     width: form.value.size,
@@ -272,53 +342,92 @@ const renderPreview = async () => {
       dark: form.value.fgColor,
       light: form.value.bgColor,
     },
-  })
-}
+  });
+};
 
-// Watch form changes and update preview
-watch(form, renderPreview, { deep: true })
+const schedulePreview = () => {
+  clearPreviewTimer();
+  previewTimer = setTimeout(() => {
+    renderPreviewNow().catch((e) => console.error("Preview render error:", e));
+  }, DEBOUNCE_MS);
+};
 
+// ✅ Render when mounted (canvas exists)
 onMounted(() => {
-  renderPreview()
-})
+  schedulePreview();
+});
+
+// ✅ Render when qrCode loads/changes
+watch(
+  () => qrCode.value?.id,
+  () => {
+    schedulePreview();
+  }
+);
+
+// ✅ Render when any form field changes (debounced)
+watch(
+  form,
+  () => {
+    schedulePreview();
+  },
+  { deep: true }
+);
+
+onBeforeUnmount(() => {
+  clearPreviewTimer();
+});
 
 // Format date
 const formatDate = (dateString) => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-}
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+};
 
 // Save changes
 const saveChanges = async () => {
-  saving.value = true
-  saveError.value = ''
-  saveSuccess.value = false
+  saveError.value = "";
+  saveSuccess.value = false;
+
+  // ✅ Basic validation (since we're not relying solely on browser validation)
+  if (!form.value.title?.trim()) {
+    saveError.value = "Title is required";
+    return;
+  }
+
+  saving.value = true;
 
   try {
-    await $fetch(`/api/qr/${id}`, {
-      method: 'PUT',
+    await $fetch(`/api/qr/${id.value}`, {
+      method: "PUT",
       body: {
-        title: form.value.title,
+        title: form.value.title.trim(),
         description: form.value.description,
         size: form.value.size,
         fgColor: form.value.fgColor,
         bgColor: form.value.bgColor,
         errorLevel: form.value.errorLevel,
-      }
-    })
+      },
+    });
 
-    saveSuccess.value = true
+    // ✅ Keep local view consistent (optional) by refreshing
+    await refresh();
+
+    saveSuccess.value = true;
     setTimeout(() => {
-      router.push('/dashboard')
-    }, 1500)
-
+      router.push("/dashboard");
+    }, 1500);
   } catch (err) {
-    console.error('Save error:', err)
-    // If you want to surface a server message (optional):
-    // saveError.value = err?.data?.statusMessage || err?.message || 'Failed to save changes'
-    saveError.value = 'Failed to save changes'
+    console.error("Save error:", err);
+    // Optional: surface a server-provided message if present
+    // saveError.value = err?.data?.statusMessage || err?.message || "Failed to save changes";
+    saveError.value = "Failed to save changes";
   } finally {
-    saving.value = false
+    saving.value = false;
   }
-}
+};
 </script>
