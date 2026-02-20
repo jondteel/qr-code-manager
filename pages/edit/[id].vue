@@ -295,7 +295,7 @@ const saveChanges = async () => {
   saveSuccess.value = false
 
   try {
-    const response = await $fetch(`/api/qr/${id}`, {
+    await $fetch(`/api/qr/${id}`, {
       method: 'PUT',
       body: {
         title: form.value.title,
@@ -307,17 +307,16 @@ const saveChanges = async () => {
       }
     })
 
-    if (response.error) {
-      saveError.value = response.error
-    } else {
-      saveSuccess.value = true
-      setTimeout(() => {
-        router.push('/dashboard')
-      }, 1500)
-    }
+    saveSuccess.value = true
+    setTimeout(() => {
+      router.push('/dashboard')
+    }, 1500)
+
   } catch (err) {
-    saveError.value = 'Failed to save changes'
     console.error('Save error:', err)
+    // If you want to surface a server message (optional):
+    // saveError.value = err?.data?.statusMessage || err?.message || 'Failed to save changes'
+    saveError.value = 'Failed to save changes'
   } finally {
     saving.value = false
   }

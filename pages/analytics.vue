@@ -127,7 +127,6 @@ const signOut = async () => {
   router.push('/login')
 }
 
-// Time period filter
 const timePeriods = [
   { label: '7 Days', value: 7 },
   { label: '30 Days', value: 30 },
@@ -137,10 +136,17 @@ const timePeriods = [
 
 const selectedPeriod = ref(30)
 
-// Fetch analytics data
-const { data: analyticsData } = await useFetch('/api/analytics/overview', {
-  query: { period: selectedPeriod }
-})
+// ✅ query must use the VALUE
+const query = computed(() => ({ period: selectedPeriod.value }))
+
+// ✅ Nuxt will refetch automatically when watched refs change
+const { data: analyticsData, pending, error, refresh } = await useFetch(
+  '/api/analytics/overview',
+  {
+    query,
+    watch: [selectedPeriod],   // refetch when period changes
+  }
+)
 
 const stats = computed(() => analyticsData.value?.stats || {
   totalScans: 0,
@@ -151,13 +157,4 @@ const stats = computed(() => analyticsData.value?.stats || {
 })
 
 const topQRCodes = computed(() => analyticsData.value?.topQRCodes || [])
-
-// Watch for period changes and refetch
-watch(selectedPeriod, async () => {
-  // Refetch data when period changes
-  const { data } = await useFetch('/api/analytics/overview', {
-    query: { period: selectedPeriod.value }
-  })
-  analyticsData.value = data.value
-})
 </script>

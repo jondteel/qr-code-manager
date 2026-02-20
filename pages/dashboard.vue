@@ -16,7 +16,7 @@
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+                  d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
                 />
               </svg>
               <span class="ml-2 text-xl font-bold text-gray-900">QR Manager</span>
@@ -60,9 +60,18 @@
               <p class="text-3xl font-bold text-gray-900">{{ stats.totalQRCodes }}</p>
             </div>
             <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+              <svg
+                class="w-6 h-6 text-blue-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+                />
               </svg>
             </div>
           </div>
@@ -75,9 +84,18 @@
               <p class="text-3xl font-bold text-gray-900">{{ stats.totalShortUrls }}</p>
             </div>
             <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
-              <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              <svg
+                class="w-6 h-6 text-indigo-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                />
               </svg>
             </div>
           </div>
@@ -90,10 +108,19 @@
               <p class="text-3xl font-bold text-gray-900">{{ stats.totalScans }}</p>
             </div>
             <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                class="w-6 h-6 text-purple-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                />
               </svg>
             </div>
           </div>
@@ -106,9 +133,18 @@
               <p class="text-3xl font-bold text-gray-900">{{ stats.thisMonthScans }}</p>
             </div>
             <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              <svg
+                class="w-6 h-6 text-green-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                />
               </svg>
             </div>
           </div>
@@ -129,9 +165,17 @@
         </NuxtLink>
       </div>
 
+      <!-- ✅ FIXED: error / grid / empty are a single v-if chain -->
+      <div
+        v-if="error"
+        class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 text-red-800"
+      >
+        Failed to load your QR codes.
+      </div>
+
       <!-- QR Codes Grid -->
       <div
-        v-if="qrCodes.length > 0"
+        v-else-if="qrCodes.length > 0"
         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
       >
         <div
@@ -143,17 +187,27 @@
             <div class="flex items-start justify-between mb-4">
               <div class="flex-1">
                 <h3 class="font-semibold text-gray-900 mb-1">{{ qr.title }}</h3>
-                <p class="text-sm text-gray-500 truncate">
-                  {{ qr.data }}
-                </p>
+                <p class="text-sm text-gray-500 truncate">{{ qr.data }}</p>
               </div>
 
               <!-- Menu wrapper gets a data attr so click-outside can detect properly -->
               <div class="relative" data-menu-root>
-                <button @click.stop="toggleMenu(qr.id)" class="text-gray-400 hover:text-gray-600">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                <button
+                  @click.stop="toggleMenu(qr.id)"
+                  class="text-gray-400 hover:text-gray-600"
+                >
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                    />
                   </svg>
                 </button>
 
@@ -181,7 +235,10 @@
             <div class="bg-gray-50 rounded-lg p-4 mb-4 flex items-center justify-center">
               <ClientOnly>
                 <!-- ✅ FIXED: real ref mapping by id (no querySelectorAll / no index assumptions) -->
-                <canvas :ref="(el) => setCanvasRef(qr.id, el)" class="bg-white rounded"></canvas>
+                <canvas
+                  :ref="(el) => setCanvasRef(qr.id, el)"
+                  class="bg-white rounded"
+                ></canvas>
               </ClientOnly>
             </div>
 
@@ -209,12 +266,23 @@
 
       <!-- Empty state -->
       <div v-else class="text-center py-12">
-        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+        <svg
+          class="mx-auto h-12 w-12 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+          />
         </svg>
         <h3 class="mt-2 text-sm font-semibold text-gray-900">No QR codes yet</h3>
-        <p class="mt-1 text-sm text-gray-500">Get started by creating your first QR code.</p>
+        <p class="mt-1 text-sm text-gray-500">
+          Get started by creating your first QR code.
+        </p>
         <div class="mt-6">
           <NuxtLink
             to="/generate"
@@ -375,7 +443,6 @@ const toggleMenu = (id) => {
 
 // ✅ FIXED: click-outside detection + cleanup listener
 const onDocClick = (e) => {
-  // if click happened inside a menu root, ignore
   const target = e.target;
   if (target && target.closest && target.closest("[data-menu-root]")) return;
   openMenuId.value = null;
@@ -411,7 +478,7 @@ const confirmDelete = (qr) => {
   openMenuId.value = null;
 };
 
-// Handle delete confirmation (already updated for best-practice API errors)
+// Handle delete confirmation
 const handleDeleteConfirm = async () => {
   showDeleteModal.value = false;
 
