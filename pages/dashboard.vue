@@ -59,7 +59,9 @@
               <p class="text-sm text-gray-600 mb-1">Total QR Codes</p>
               <p class="text-3xl font-bold text-gray-900">{{ stats.totalQRCodes }}</p>
             </div>
-            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+            <div
+              class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center"
+            >
               <svg
                 class="w-6 h-6 text-blue-600"
                 fill="none"
@@ -83,7 +85,9 @@
               <p class="text-sm text-gray-600 mb-1">Short URLs</p>
               <p class="text-3xl font-bold text-gray-900">{{ stats.totalShortUrls }}</p>
             </div>
-            <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+            <div
+              class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center"
+            >
               <svg
                 class="w-6 h-6 text-indigo-600"
                 fill="none"
@@ -107,14 +111,21 @@
               <p class="text-sm text-gray-600 mb-1">Total Scans</p>
               <p class="text-3xl font-bold text-gray-900">{{ stats.totalScans }}</p>
             </div>
-            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+            <div
+              class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center"
+            >
               <svg
                 class="w-6 h-6 text-purple-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -132,7 +143,9 @@
               <p class="text-sm text-gray-600 mb-1">This Month</p>
               <p class="text-3xl font-bold text-gray-900">{{ stats.thisMonthScans }}</p>
             </div>
-            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+            <div
+              class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center"
+            >
               <svg
                 class="w-6 h-6 text-green-600"
                 fill="none"
@@ -159,7 +172,12 @@
           class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center gap-2"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 4v16m8-8H4"
+            />
           </svg>
           Create New QR Code
         </NuxtLink>
@@ -255,6 +273,7 @@
                 Download
               </button>
               <button
+                @click="router.push(`/analytics/${qr.id}`)"
                 class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition text-sm font-medium"
               >
                 View Stats
