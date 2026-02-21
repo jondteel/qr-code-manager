@@ -1,16 +1,17 @@
-// pages/index.vue
+<!-- pages/index.vue -->
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
     <!-- Navigation -->
     <nav class="bg-white shadow-sm border-b border-gray-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
-          <div class="flex items-center">
+          <NuxtLink to="/" class="flex items-center">
             <svg
               class="h-8 w-8 text-blue-600"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
                 stroke-linecap="round"
@@ -20,7 +21,8 @@
               />
             </svg>
             <span class="ml-2 text-xl font-bold text-gray-900">QR Manager</span>
-          </div>
+          </NuxtLink>
+
           <div class="flex gap-4">
             <NuxtLink
               to="/login"
@@ -54,18 +56,19 @@
           Create custom QR codes, shorten URLs, and track analytics - all in one powerful
           platform
         </p>
-        <div class="flex gap-4 justify-center">
+        <div class="flex gap-4 justify-center flex-wrap">
           <NuxtLink
             to="/signup"
             class="bg-blue-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-700 transition shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
           >
             Get Started Free
           </NuxtLink>
-          <button
+          <NuxtLink
+            to="/generate"
             class="bg-white text-gray-700 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-50 transition border border-gray-300"
           >
             View Demo
-          </button>
+          </NuxtLink>
         </div>
       </div>
 
@@ -80,6 +83,7 @@
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
                 stroke-linecap="round"
@@ -109,13 +113,14 @@
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
-                d="M13 10V3L4 14h7v7l9-11h-7z"
+                d="M8 16l-2-2m0 0l2-2m-2 2h12M16 8l2 2m0 0l-2 2m2-2H6"
               />
             </svg>
           </div>
-          <h3 class="text-xl font-bold text-gray-900 mb-2">URL Shortener</h3>
+          <h3 class="text-xl font-bold text-gray-900 mb-2">Easy Sharing</h3>
           <p class="text-gray-600">
-            Create short links that automatically generate QR codes for easy sharing
+            Download ready-to-use QR codes for flyers, tables, packaging, and social posts
+            in seconds.
           </p>
         </div>
 
@@ -128,6 +133,7 @@
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
                 stroke-linecap="round"
@@ -149,9 +155,33 @@
     <footer class="bg-white border-t border-gray-200 mt-24">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <p class="text-center text-gray-500">
-          © 2026 QR Manager. Built with Nuxt & Prisma.
+          © {{ currentYear }} QR Manager. Built with Nuxt & Prisma.
         </p>
       </div>
     </footer>
   </div>
 </template>
+
+<script setup lang="ts">
+const user = useSupabaseUser();
+
+useHead({
+  title: "QR Manager - Generate, Shorten, Track",
+  meta: [
+    {
+      name: "description",
+      content:
+        "Create custom QR codes, shorten URLs, and track scan analytics in one place.",
+    },
+  ],
+});
+
+const currentYear = new Date().getFullYear();
+
+// If already authenticated, send them to dashboard instead of showing marketing page
+watchEffect(() => {
+  if (user.value) {
+    navigateTo("/dashboard");
+  }
+});
+</script>

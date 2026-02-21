@@ -1,6 +1,7 @@
+<!-- generate.vue -->
 <template>
   <div class="min-h-screen bg-gray-50">
-    <!-- Header/Navigation (copied from your existing page) -->
+    <!-- Header/Navigation -->
     <nav class="bg-white shadow-sm border-b border-gray-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
@@ -23,15 +24,15 @@
             </NuxtLink>
 
             <div class="hidden md:flex items-center gap-x-8 whitespace-nowrap">
-              <NuxtLink to="/dashboard" class="text-gray-600 hover:text-gray-900"
-                >Dashboard</NuxtLink
-              >
-              <NuxtLink to="/generate" class="text-blue-600 font-medium"
-                >Generate QR</NuxtLink
-              >
-              <NuxtLink to="/analytics" class="text-gray-600 hover:text-gray-900"
-                >Analytics</NuxtLink
-              >
+              <NuxtLink to="/dashboard" class="text-gray-600 hover:text-gray-900">
+                Dashboard
+              </NuxtLink>
+              <NuxtLink to="/generate" class="text-blue-600 font-medium">
+                Generate QR
+              </NuxtLink>
+              <NuxtLink to="/analytics" class="text-gray-600 hover:text-gray-900">
+                Analytics
+              </NuxtLink>
             </div>
           </div>
 
@@ -64,9 +65,9 @@
           <div class="space-y-6">
             <!-- Content -->
             <div>
-              <label class="block text-sm font-medium text-gray-900 mb-1"
-                >QR Content</label
-              >
+              <label class="block text-sm font-medium text-gray-900 mb-1">
+                QR Content
+              </label>
               <textarea
                 v-model="content"
                 rows="4"
@@ -81,11 +82,11 @@
               </div>
             </div>
 
-            <!-- Label (required) -->
+            <!-- Label -->
             <div>
-              <label class="block text-sm font-medium text-gray-900 mb-1"
-                >Label / Name *</label
-              >
+              <label class="block text-sm font-medium text-gray-900 mb-1">
+                Label / Name *
+              </label>
               <input
                 v-model="label"
                 type="text"
@@ -94,8 +95,7 @@
                 placeholder="e.g., Business Card, Flyer A, Store Poster..."
               />
               <p class="text-xs text-gray-600 mt-2">
-                Give this QR code a name to identify it in your dashboard. All QR codes
-                are tracked.
+                Give this QR code a name to identify it in your dashboard.
               </p>
             </div>
 
@@ -139,9 +139,9 @@
 
               <!-- Foreground -->
               <div>
-                <label class="block text-sm font-medium text-gray-900 mb-1"
-                  >Foreground</label
-                >
+                <label class="block text-sm font-medium text-gray-900 mb-1">
+                  Foreground
+                </label>
                 <div class="flex items-center gap-3">
                   <input
                     v-model="fgColor"
@@ -155,13 +155,19 @@
                     placeholder="#000000"
                   />
                 </div>
+                <p
+                  v-if="fgColor && !isValidHexColor(fgColor)"
+                  class="text-xs text-amber-600 mt-1"
+                >
+                  Enter a valid hex color (e.g., #111827). Preview uses the last valid value.
+                </p>
               </div>
 
               <!-- Background -->
               <div>
-                <label class="block text-sm font-medium text-gray-900 mb-1"
-                  >Background</label
-                >
+                <label class="block text-sm font-medium text-gray-900 mb-1">
+                  Background
+                </label>
                 <div class="flex items-center gap-3">
                   <input
                     v-model="bgColor"
@@ -175,13 +181,19 @@
                     placeholder="#FFFFFF"
                   />
                 </div>
+                <p
+                  v-if="bgColor && !isValidHexColor(bgColor)"
+                  class="text-xs text-amber-600 mt-1"
+                >
+                  Enter a valid hex color (e.g., #FFFFFF). Preview uses the last valid value.
+                </p>
               </div>
 
               <!-- Error correction -->
               <div class="md:col-span-2">
-                <label class="block text-sm font-medium text-gray-900 mb-1"
-                  >Error Correction</label
-                >
+                <label class="block text-sm font-medium text-gray-900 mb-1">
+                  Error Correction
+                </label>
                 <select
                   v-model="errorCorrectionLevel"
                   class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -197,30 +209,62 @@
               </div>
             </div>
 
+            <!-- Save/Download Status -->
+            <div
+              v-if="savedShortCode"
+              class="rounded-lg border border-green-200 bg-green-50 p-3 text-sm"
+            >
+              <p class="text-green-800 font-medium">
+                Tracked QR saved
+                <span v-if="isDirtySinceSave" class="font-normal">
+                  (changes made since last save)
+                </span>
+              </p>
+              <p class="text-green-700 mt-1 break-all">
+                Tracking link: {{ trackedUrl }}
+              </p>
+              <p v-if="savedQrId" class="text-green-700 mt-1">
+                QR ID: {{ savedQrId }}
+              </p>
+            </div>
+
             <!-- Actions -->
             <div class="flex flex-col sm:flex-row gap-3">
               <button
                 type="button"
                 class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
-                :disabled="!canDownload || isGenerating"
-                :class="
-                  !canDownload || isGenerating ? 'opacity-60 cursor-not-allowed' : ''
-                "
-                @click="downloadPng"
+                :disabled="!canSave || isSaving"
+                :class="!canSave || isSaving ? 'opacity-60 cursor-not-allowed' : ''"
+                @click="saveTrackedQr"
               >
-                {{ isGenerating ? "Generating…" : "Download PNG" }}
+                {{ isSaving ? "Saving…" : isDirtySinceSave ? "Save Changes" : "Save / Create QR Code" }}
               </button>
 
               <button
                 type="button"
-                class="flex-1 bg-gray-100 text-gray-800 px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition"
+                class="flex-1 bg-emerald-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-emerald-700 transition"
+                :disabled="!canDownloadSaved || isDownloading"
+                :class="!canDownloadSaved || isDownloading ? 'opacity-60 cursor-not-allowed' : ''"
+                @click="downloadSavedPng"
+              >
+                {{ isDownloading ? "Downloading…" : "Download PNG" }}
+              </button>
+
+              <button
+                type="button"
+                class="sm:w-auto bg-gray-100 text-gray-800 px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition"
                 @click="resetToDefaults"
               >
                 Reset
               </button>
             </div>
 
+            <p class="text-xs text-gray-500">
+              Preview uses your direct content. Downloaded PNG uses the saved tracked short link.
+            </p>
+
             <p v-if="errorMessage" class="text-sm text-red-600">{{ errorMessage }}</p>
+            <p v-if="successMessage" class="text-sm text-green-600">{{ successMessage }}</p>
           </div>
         </section>
 
@@ -237,7 +281,7 @@
             >
               <div class="flex flex-col items-center gap-3">
                 <canvas ref="canvasRef" class="bg-white rounded" />
-                <p class="text-xs text-gray-500">
+                <p class="text-xs text-gray-500 text-center">
                   {{
                     canGenerate
                       ? "Preview updates automatically."
@@ -247,19 +291,6 @@
               </div>
             </div>
           </ClientOnly>
-
-          <div class="mt-6 rounded-lg border border-gray-200 p-4">
-            <h3 class="text-sm font-semibold text-gray-900 mb-2">
-              What’s next (analytics)
-            </h3>
-            <ul class="text-sm text-gray-600 space-y-1 list-disc pl-5">
-              <li>Create a “tracked link” that redirects to your destination URL</li>
-              <li>
-                Store QR records in Supabase (user_id, label, destination, created_at)
-              </li>
-              <li>Log scan events (timestamp, device, referrer, geo if available)</li>
-            </ul>
-          </div>
         </section>
       </div>
     </main>
@@ -267,21 +298,25 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
-const supabase = useSupabaseClient()
-const user = useSupabaseUser()
-const router = useRouter()
+const supabase = useSupabaseClient();
+const user = useSupabaseUser();
+const router = useRouter();
 
 const signOut = async () => {
-  await supabase.auth.signOut()
-  router.push('/login')
-}
+  await supabase.auth.signOut();
+  router.push("/login");
+};
 
 type QRCreateResponse = {
   success?: boolean;
   error?: string;
-  qrCode?: any;
+  qrCode?: {
+    id?: string;
+    title?: string;
+    data?: string;
+  };
   shortUrl?: {
     id: string;
     shortCode: string;
@@ -297,83 +332,171 @@ const label = ref<string>("");
 
 const size = ref<number>(320);
 const margin = ref<number>(2);
-const fgColor = ref<string>("#111827"); // gray-900
+const fgColor = ref<string>("#111827");
 const bgColor = ref<string>("#ffffff");
 const errorCorrectionLevel = ref<ECL>("M");
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
-const isGenerating = ref(false);
+
+const isSaving = ref(false);
+const isDownloading = ref(false);
+
 const errorMessage = ref<string>("");
+const successMessage = ref<string>("");
+
+// Saved/tracked record state
+const savedQrId = ref<string | null>(null);
+const savedShortCode = ref<string | null>(null);
+const lastSavedFingerprint = ref<string | null>(null);
 
 const canGenerate = computed(() => content.value.trim().length > 0);
-const canDownload = computed(
+const canSave = computed(
   () => content.value.trim().length > 0 && label.value.trim().length > 0
 );
+
+// Only allow download if there is a saved tracked QR and form has not changed since save
+const isDirtySinceSave = computed(() => {
+  if (!lastSavedFingerprint.value) return false;
+  return currentFingerprint.value !== lastSavedFingerprint.value;
+});
+
+const canDownloadSaved = computed(() => {
+  return !!savedShortCode.value && !isDirtySinceSave.value;
+});
+
+const trackedUrl = computed(() => {
+  if (!savedShortCode.value || !process.client) return "";
+  return `${window.location.origin}/s/${savedShortCode.value}`;
+});
+
+// ---- QR library ----
 let QRCode: any = null;
 
 async function loadQrLib() {
   if (QRCode) return QRCode;
-  // Dynamic import so it only loads on client when needed
   const mod = await import("qrcode");
   QRCode = mod.default ?? mod;
   return QRCode;
 }
 
-async function renderQr() {
-  console.log("renderQr called", {
-    canGenerate: canGenerate.value,
-    content: content.value,
-    label: label.value,
-  });
+// ---- Color validation / normalization ----
+const HEX_COLOR_RE = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 
-  errorMessage.value = "";
+function isValidHexColor(value: string | null | undefined): boolean {
+  return !!value && HEX_COLOR_RE.test(value.trim());
+}
+
+function normalizeHexColor(value: string, fallback: string): string {
+  const raw = value.trim();
+  if (!isValidHexColor(raw)) return fallback;
+
+  // Expand 3-digit hex (#abc -> #aabbcc) for consistency
+  if (raw.length === 4) {
+    const r = raw[1];
+    const g = raw[2];
+    const b = raw[3];
+    return `#${r}${r}${g}${g}${b}${b}`.toLowerCase();
+  }
+
+  return raw.toLowerCase();
+}
+
+const safeFgColor = computed(() => normalizeHexColor(fgColor.value, "#111827"));
+const safeBgColor = computed(() => normalizeHexColor(bgColor.value, "#ffffff"));
+
+// ---- Fingerprint (used to prevent duplicate downloads after edits without re-save) ----
+const currentFingerprint = computed(() => {
+  return JSON.stringify({
+    content: content.value.trim(),
+    label: label.value.trim(),
+    size: size.value,
+    margin: margin.value,
+    fgColor: safeFgColor.value,
+    bgColor: safeBgColor.value,
+    errorCorrectionLevel: errorCorrectionLevel.value,
+  });
+});
+
+// Any change after a successful save clears the success message (but keeps saved state)
+watch(
+  [content, label, size, margin, fgColor, bgColor, errorCorrectionLevel],
+  () => {
+    successMessage.value = "";
+  }
+);
+
+// ---- Preview rendering (debounced) ----
+let renderTimer: ReturnType<typeof setTimeout> | null = null;
+let renderRequestId = 0;
+
+function clearCanvas() {
+  const canvas = canvasRef.value;
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  canvas.width = 1;
+  canvas.height = 1;
+  ctx.clearRect(0, 0, 1, 1);
+}
+
+async function renderQr() {
+  const requestId = ++renderRequestId;
+
+  // Don't wipe save/download state messages here; only clear hard errors if render succeeds/fails
   if (!canGenerate.value) {
-    console.log("canGenerate is false, clearing canvas");
-    // Clear canvas if empty
-    const canvas = canvasRef.value;
-    if (canvas) {
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        canvas.width = 1;
-        canvas.height = 1;
-        ctx.clearRect(0, 0, 1, 1);
-      }
-    }
+    clearCanvas();
     return;
   }
 
   const canvas = canvasRef.value;
-  console.log("canvas ref:", canvas);
   if (!canvas) return;
 
   try {
-    console.log("Loading QR library...");
     const QR = await loadQrLib();
-    console.log("Rendering QR to canvas...");
+    if (requestId !== renderRequestId) return;
+
     await QR.toCanvas(canvas, content.value.trim(), {
       width: size.value,
       margin: margin.value,
       errorCorrectionLevel: errorCorrectionLevel.value,
       color: {
-        dark: fgColor.value,
-        light: bgColor.value,
+        dark: safeFgColor.value,
+        light: safeBgColor.value,
       },
     });
-    console.log("QR rendered successfully");
   } catch (e: any) {
-    console.error("QR render error:", e);
     errorMessage.value = e?.message ?? "Failed to render QR code.";
   }
 }
 
+function scheduleRender(delay = 120) {
+  if (renderTimer) clearTimeout(renderTimer);
+  renderTimer = setTimeout(() => {
+    renderQr();
+  }, delay);
+}
+
 watch([content, size, margin, fgColor, bgColor, errorCorrectionLevel], () => {
-  // Live preview updates as you type
-  renderQr();
+  // Clear previous render-related error before trying again
+  errorMessage.value = "";
+  scheduleRender();
 });
 
 onMounted(() => {
   renderQr();
 });
+
+onBeforeUnmount(() => {
+  if (renderTimer) clearTimeout(renderTimer);
+});
+
+// ---- Actions ----
+function resetSavedState() {
+  savedQrId.value = null;
+  savedShortCode.value = null;
+  lastSavedFingerprint.value = null;
+}
 
 function resetToDefaults() {
   content.value = "";
@@ -383,32 +506,34 @@ function resetToDefaults() {
   fgColor.value = "#111827";
   bgColor.value = "#ffffff";
   errorCorrectionLevel.value = "M";
+
   errorMessage.value = "";
-  renderQr();
+  successMessage.value = "";
+
+  // reset saved state too because form is reset
+  resetSavedState();
+  // no manual render; watcher handles it
 }
 
-async function downloadPng() {
-  if (!canDownload.value) {
+async function saveTrackedQr() {
+  if (!canSave.value) {
     errorMessage.value = "Please enter both content and a label";
     return;
   }
 
-  isGenerating.value = true;
+  isSaving.value = true;
   errorMessage.value = "";
+  successMessage.value = "";
 
   try {
-    const canvas = canvasRef.value;
-    if (!canvas) throw new Error("QR canvas not ready yet.");
-
-    // Always save to database and create short URL
     const qrResponse = await $fetch<QRCreateResponse>("/api/qr/create", {
       method: "POST",
       body: {
         title: label.value.trim(),
         data: content.value.trim(),
         size: size.value,
-        fgColor: fgColor.value,
-        bgColor: bgColor.value,
+        fgColor: safeFgColor.value,
+        bgColor: safeBgColor.value,
         errorLevel: errorCorrectionLevel.value,
         createShortUrl: true,
       },
@@ -418,31 +543,58 @@ async function downloadPng() {
       throw new Error(qrResponse.error);
     }
 
-    // Use the short URL for the QR code
-    if (!qrResponse.shortUrl) {
+    if (!qrResponse.shortUrl?.shortCode) {
       throw new Error("Failed to generate tracking URL");
     }
 
-    const shortUrl = `${window.location.origin}/s/${qrResponse.shortUrl.shortCode}`;
+    savedShortCode.value = qrResponse.shortUrl.shortCode;
+    savedQrId.value = qrResponse.qrCode?.id ?? null;
+    lastSavedFingerprint.value = currentFingerprint.value;
 
-    // Generate QR with short URL
+    successMessage.value = "Tracked QR saved successfully. You can now download the PNG.";
+  } catch (e: any) {
+    errorMessage.value = e?.message ?? "Failed to save tracked QR code.";
+  } finally {
+    isSaving.value = false;
+  }
+}
+
+async function downloadSavedPng() {
+  if (!savedShortCode.value) {
+    errorMessage.value = "Please save/create a tracked QR first.";
+    return;
+  }
+
+  if (isDirtySinceSave.value) {
+    errorMessage.value =
+      "You changed the QR after saving. Save changes first, then download.";
+    return;
+  }
+
+  isDownloading.value = true;
+  errorMessage.value = "";
+  successMessage.value = "";
+
+  try {
+    const canvas = canvasRef.value;
+    if (!canvas) throw new Error("QR canvas not ready yet.");
+
+    const shortUrl = `${window.location.origin}/s/${savedShortCode.value}`;
+
     const QR = await loadQrLib();
     await QR.toCanvas(canvas, shortUrl, {
       width: size.value,
       margin: margin.value,
       errorCorrectionLevel: errorCorrectionLevel.value,
       color: {
-        dark: fgColor.value,
-        light: bgColor.value,
+        dark: safeFgColor.value,
+        light: safeBgColor.value,
       },
     });
 
-    // Download the PNG
     const dataUrl = canvas.toDataURL("image/png");
-    const safeLabel = label.value
-      .trim()
-      .replace(/[^\w\-]+/g, "_")
-      .slice(0, 60);
+    const safeLabel =
+      label.value.trim().replace(/[^\w\-]+/g, "_").slice(0, 60) || "qr_code";
 
     const a = document.createElement("a");
     a.href = dataUrl;
@@ -451,14 +603,14 @@ async function downloadPng() {
     a.click();
     a.remove();
 
-    console.log("✅ QR code created with tracking URL:", shortUrl);
+    successMessage.value = "PNG downloaded.";
 
-    // Re-render preview with original content
+    // Re-render preview back to direct content (your intended behavior)
     await renderQr();
   } catch (e: any) {
-    errorMessage.value = e?.message ?? "Failed to create QR code.";
+    errorMessage.value = e?.message ?? "Failed to download QR code.";
   } finally {
-    isGenerating.value = false;
+    isDownloading.value = false;
   }
 }
 </script>
