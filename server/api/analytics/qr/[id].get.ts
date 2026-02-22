@@ -1,38 +1,71 @@
 // server/api/analytics/qr/[id].get.ts
 import prisma from "~/server/utils/prisma";
 import { serverSupabaseUser } from "#supabase/server";
+import { createError, getQuery, getRouterParam } from "h3";
+
+type PeriodValue = 7 | 30 | 90 | "all";
+
+function parsePeriod(raw: unknown): PeriodValue {
+  if (raw === "all") return "all";
+
+  const n = Number(raw ?? 30);
+  if (n === 7 || n === 30 || n === 90) return n;
+
+  return 30; // safe default
+}
 
 export default defineEventHandler(async (event) => {
   try {
     const user = await serverSupabaseUser(event);
     if (!user?.sub) {
-      return { error: "Unauthorized", statusCode: 401 };
+      throw createError({
+        statusCode: 401,
+        statusMessage: "Unauthorized",
+      });
     }
 
     const id = getRouterParam(event, "id");
-    if (!id) return { error: "Missing QR id", statusCode: 400 };
+    if (!id) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "Missing QR id",
+      });
+    }
 
     const query = getQuery(event);
-    const periodRaw = query.period ?? 30;
-    const period = periodRaw === "all" ? "all" : Number(periodRaw);
+    const period = parsePeriod(query.period);
 
-    // date range
+    // Date range
     let startDate: Date;
     if (period === "all") {
       startDate = new Date(0);
     } else {
-      const daysBack = Number.isFinite(period) && period > 0 ? period : 30;
       startDate = new Date();
-      startDate.setDate(startDate.getDate() - daysBack);
+      startDate.setDate(startDate.getDate() - period);
     }
 
     // Ensure the QR belongs to this user
     const qr = await prisma.qRCode.findFirst({
       where: { id, userId: user.sub },
-      include: { shortUrl: true },
+      select: {
+        id: true,
+        title: true,
+        data: true,
+        createdAt: true,
+        shortUrl: {
+          select: {
+            shortCode: true,
+          },
+        },
+      },
     });
 
-    if (!qr) return { error: "Not found", statusCode: 404 };
+    if (!qr) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: "QR code not found",
+      });
+    }
 
     // Pull scans for this QR (within period)
     const scans = await prisma.analytics.findMany({
@@ -46,31 +79,33 @@ export default defineEventHandler(async (event) => {
         timestamp: true,
         ipAddress: true,
         userAgent: true,
-        shortUrlId: true,
       },
     });
 
     const totalScans = scans.length;
 
-    // unique visitors based on ipAddress (skip unknowns)
+    // Unique visitors based on IP (skip unknowns)
     const uniqueIPs = new Set<string>();
     for (const s of scans) {
-      if (s.ipAddress && s.ipAddress !== "unknown") uniqueIPs.add(s.ipAddress);
+      if (s.ipAddress && s.ipAddress !== "unknown") {
+        uniqueIPs.add(s.ipAddress);
+      }
     }
     const uniqueVisitors = uniqueIPs.size;
 
-    // avg scans/day
+    // Avg scans/day
     const days =
       period === "all"
         ? Math.max(
             1,
             Math.ceil((Date.now() - startDate.getTime()) / (1000 * 60 * 60 * 24))
           )
-        : Math.max(1, Number(period));
+        : period;
+
     const avgScansPerDay = Math.round(totalScans / days);
 
-    // bucket by day
-    const buckets = new Map<string, number>(); // yyyy-mm-dd -> count
+    // Bucket by day (UTC day keys)
+    const buckets = new Map<string, number>(); // YYYY-MM-DD -> count
     for (const s of scans) {
       const key = new Date(s.timestamp).toISOString().slice(0, 10);
       buckets.set(key, (buckets.get(key) ?? 0) + 1);
@@ -80,13 +115,12 @@ export default defineEventHandler(async (event) => {
 
     if (period === "all") {
       const keys = Array.from(buckets.keys()).sort();
-      const capped = keys.slice(Math.max(0, keys.length - 365));
+      const capped = keys.slice(Math.max(0, keys.length - 365)); // cap payload
       series = capped.map((k) => ({ date: k, scans: buckets.get(k) ?? 0 }));
     } else {
-      const daysBack = Math.max(1, Number(period));
       const end = new Date();
       const start = new Date();
-      start.setDate(end.getDate() - (daysBack - 1));
+      start.setDate(end.getDate() - (period - 1));
 
       for (
         let cursor = new Date(start);
@@ -98,7 +132,7 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // last N scans for table (cap payload)
+    // Latest scans table (cap payload)
     const recentScans = scans.slice(0, 50);
 
     return {
@@ -108,9 +142,7 @@ export default defineEventHandler(async (event) => {
         title: qr.title,
         data: qr.data,
         createdAt: qr.createdAt,
-        shortUrl: qr.shortUrl
-          ? { shortCode: qr.shortUrl.shortCode }
-          : null,
+        shortUrl: qr.shortUrl ? { shortCode: qr.shortUrl.shortCode } : null,
       },
       stats: {
         totalScans,
@@ -121,10 +153,14 @@ export default defineEventHandler(async (event) => {
       recentScans,
     };
   } catch (error: any) {
+    // Preserve H3/Nuxt errors with status codes
+    if (error?.statusCode) throw error;
+
     console.error("QR analytics error:", error);
-    return {
-      error: error?.message || "Failed to fetch QR analytics",
+
+    throw createError({
       statusCode: 500,
-    };
+      statusMessage: "Failed to fetch QR analytics",
+    });
   }
 });

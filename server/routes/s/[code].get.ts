@@ -1,16 +1,16 @@
 // server/routes/s/[code].get.ts
 import prisma from "~/server/utils/prisma";
-import { defineEventHandler, getRouterParam, getHeader, sendRedirect } from "h3";
-
-function headerToString(v: string | string[] | undefined): string | undefined {
-  if (!v) return undefined;
-  return Array.isArray(v) ? v[0] : v;
-}
-
-import type { H3Event } from "h3";
+import {
+  defineEventHandler,
+  getRouterParam,
+  getHeader,
+  sendRedirect,
+  createError,
+  type H3Event,
+} from "h3";
 
 function firstHeaderValue(event: H3Event, name: string): string | undefined {
-  const raw: unknown = getHeader(event, name) as unknown;
+  const raw = getHeader(event, name) as unknown;
 
   if (typeof raw === "string") return raw;
   if (Array.isArray(raw) && typeof raw[0] === "string") return raw[0];
@@ -18,24 +18,27 @@ function firstHeaderValue(event: H3Event, name: string): string | undefined {
   return undefined;
 }
 
-function getClientIp(event: H3Event) {
+function getClientIp(event: H3Event): string {
   const xff = firstHeaderValue(event, "x-forwarded-for");
   if (xff) {
-  const first = xff.split(",").map(s => s.trim()).find(Boolean);
-  if (first) return first;
-}
+    const first = xff.split(",").map((s) => s.trim()).find(Boolean);
+    if (first) return first;
+  }
 
   const realIp = firstHeaderValue(event, "x-real-ip");
   if (realIp) return realIp.trim();
 
-  return event.node?.req?.socket?.remoteAddress || "unknown";
+  return event.node?.req?.socket?.remoteAddress ?? "unknown";
 }
 
 export default defineEventHandler(async (event) => {
   const code = getRouterParam(event, "code");
 
   if (!code) {
-    return { error: "Missing code", statusCode: 400 };
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Missing code",
+    });
   }
 
   const shortUrl = await prisma.shortUrl.findUnique({
@@ -48,22 +51,28 @@ export default defineEventHandler(async (event) => {
   });
 
   if (!shortUrl) {
-    return { error: "Short URL not found", statusCode: 404 };
+    throw createError({
+      statusCode: 404,
+      statusMessage: "Short URL not found",
+    });
   }
 
-  const uaRaw = getHeader(event, "user-agent");
-  const userAgent = headerToString(uaRaw) ?? null;
+  const userAgent = firstHeaderValue(event, "user-agent") ?? null;
+  const ipAddress = getClientIp(event);
 
-  const ipAddress = getClientIp(event) || "unknown";
-
-  await prisma.analytics.create({
-    data: {
-      shortUrlId: shortUrl.id,
-      qrCodeId: shortUrl.qrCode?.id ?? null,
-      userAgent,
-      ipAddress,
-    },
-  });
+  // Don't block redirect if analytics logging fails
+  try {
+    await prisma.analytics.create({
+      data: {
+        shortUrlId: shortUrl.id,
+        qrCodeId: shortUrl.qrCode?.id ?? null,
+        userAgent,
+        ipAddress,
+      },
+    });
+  } catch (err) {
+    console.error("Redirect analytics logging failed:", err);
+  }
 
   return sendRedirect(event, shortUrl.originalUrl, 302);
 });

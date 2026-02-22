@@ -1,38 +1,50 @@
 // server/api/analytics/overview.get.ts
 import prisma from "~/server/utils/prisma";
 import { serverSupabaseUser } from "#supabase/server";
+import { createError, getQuery } from "h3";
+
+type PeriodValue = 7 | 30 | 90 | "all";
+
+function parsePeriod(raw: unknown): PeriodValue {
+  if (raw === "all") return "all";
+
+  const n = Number(raw ?? 30);
+  if (n === 7 || n === 30 || n === 90) return n;
+
+  return 30;
+}
 
 export default defineEventHandler(async (event) => {
   try {
-    // Check authentication
+    // Auth
     const user = await serverSupabaseUser(event);
-    if (!user || !user.sub) {
-      return {
-        error: "Unauthorized",
+    if (!user?.sub) {
+      throw createError({
         statusCode: 401,
-      };
+        statusMessage: "Unauthorized",
+      });
     }
 
-    // Get query params
+    // Query params
     const query = getQuery(event);
-    const periodRaw = query.period ?? 30;
-    const period = periodRaw === "all" ? "all" : Number(periodRaw);
+    const period = parsePeriod(query.period);
 
-    // Calculate date range
+    // Date range
     let startDate: Date;
     if (period === "all") {
       startDate = new Date(0);
     } else {
-      // fallback safety
-      const daysBack = Number.isFinite(period) && period > 0 ? period : 30;
       startDate = new Date();
-      startDate.setDate(startDate.getDate() - daysBack);
+      startDate.setDate(startDate.getDate() - period);
     }
 
     // Get user's QR codes + analytics within period
     const qrCodes = await prisma.qRCode.findMany({
       where: { userId: user.sub },
-      include: {
+      select: {
+        id: true,
+        title: true,
+        data: true,
         analytics: {
           where: {
             timestamp: { gte: startDate },
@@ -42,14 +54,13 @@ export default defineEventHandler(async (event) => {
             ipAddress: true,
           },
         },
-        shortUrl: true,
       },
     });
 
-    // Calculate stats
+    // Total scans
     const totalScans = qrCodes.reduce((sum, qr) => sum + qr.analytics.length, 0);
 
-    // Unique visitors (count unique IP addresses)
+    // Unique visitors (estimated via IP)
     const uniqueIPs = new Set<string>();
     for (const qr of qrCodes) {
       for (const scan of qr.analytics) {
@@ -60,32 +71,29 @@ export default defineEventHandler(async (event) => {
     }
     const uniqueVisitors = uniqueIPs.size;
 
-    // Active QR codes (ones with at least 1 scan in period)
+    // Active QR codes (scanned this period)
     const activeQRCodes = qrCodes.filter((qr) => qr.analytics.length > 0).length;
 
-    // Average scans per day
+    // Average scans/day
     const days =
       period === "all"
         ? Math.max(
             1,
             Math.ceil((Date.now() - startDate.getTime()) / (1000 * 60 * 60 * 24))
           )
-        : Math.max(1, Number(period));
+        : period;
 
     const avgScansPerDay = Math.round(totalScans / days);
 
-    // Growth (still placeholder)
+    // Placeholder growth (keep until you implement prev-period comparison)
     const scanGrowth = 0;
 
-    // ✅ Scans over time (bucketed by day)
-    // We will return last N days if period != all; if all, we return up to last 365 points to avoid huge payloads.
-    const buckets = new Map<string, number>(); // yyyy-mm-dd -> count
+    // Scans over time (bucketed by UTC date)
+    const buckets = new Map<string, number>(); // YYYY-MM-DD -> count
 
     for (const qr of qrCodes) {
       for (const scan of qr.analytics) {
-        const d = new Date(scan.timestamp);
-        // normalize to date (UTC date string keeps stable across server TZ)
-        const key = d.toISOString().slice(0, 10); // YYYY-MM-DD
+        const key = new Date(scan.timestamp).toISOString().slice(0, 10);
         buckets.set(key, (buckets.get(key) ?? 0) + 1);
       }
     }
@@ -93,16 +101,15 @@ export default defineEventHandler(async (event) => {
     let series: Array<{ date: string; scans: number }> = [];
 
     if (period === "all") {
-      // Sort all bucket keys and cap to last 365 days worth of points (industry standard safety)
+      // Sort and cap to last 365 points for payload safety
       const keys = Array.from(buckets.keys()).sort();
       const capped = keys.slice(Math.max(0, keys.length - 365));
       series = capped.map((k) => ({ date: k, scans: buckets.get(k) ?? 0 }));
     } else {
-      // For fixed periods: fill in missing days so the chart doesn't have gaps
-      const daysBack = Math.max(1, Number(period));
-      const end = new Date(); // today
+      // Fill missing days so chart remains continuous
+      const end = new Date();
       const start = new Date();
-      start.setDate(end.getDate() - (daysBack - 1));
+      start.setDate(end.getDate() - (period - 1));
 
       for (
         let cursor = new Date(start);
@@ -114,7 +121,7 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Top performing QR codes
+    // Top performing QR codes by scan count in selected period
     const topQRCodes = qrCodes
       .map((qr) => ({
         id: qr.id,
@@ -134,14 +141,17 @@ export default defineEventHandler(async (event) => {
         avgScansPerDay,
         scanGrowth,
       },
-      series, // ✅ new
+      series,
       topQRCodes,
     };
   } catch (error: any) {
-    console.error("Analytics error:", error);
-    return {
-      error: error?.message || "Failed to fetch analytics",
+    if (error?.statusCode) throw error;
+
+    console.error("Analytics overview error:", error);
+
+    throw createError({
       statusCode: 500,
-    };
+      statusMessage: "Failed to fetch analytics",
+    });
   }
 });

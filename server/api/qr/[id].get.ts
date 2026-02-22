@@ -1,61 +1,81 @@
 import prisma from '~/server/utils/prisma'
 import { serverSupabaseUser } from '#supabase/server'
+import { createError, getRouterParam } from 'h3'
 
 export default defineEventHandler(async (event) => {
   try {
-    // Check authentication
     const user = await serverSupabaseUser(event)
-    if (!user || !user.sub) {
-      return {
-        error: 'Unauthorized',
-        statusCode: 401
-      }
+    if (!user?.sub) {
+      throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
     }
 
-    // Get QR code ID
     const id = getRouterParam(event, 'id')
-    
     if (!id) {
-      return {
-        error: 'QR code ID is required',
-        statusCode: 400
-      }
+      throw createError({ statusCode: 400, statusMessage: 'QR code ID is required' })
     }
 
-    // Fetch QR code with related data
-    const qrCode = await prisma.qRCode.findUnique({
-      where: { id },
-      include: {
-        shortUrl: true,
-        analytics: true,
-      }
+    // Fetch only the user's QR code (prevents loading someone else's data)
+    const qrCode = await prisma.qRCode.findFirst({
+      where: {
+        id,
+        userId: user.sub,
+      },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        data: true,
+        size: true,
+        fgColor: true,
+        bgColor: true,
+        errorLevel: true,
+        imageUrl: true,
+        createdAt: true,
+        updatedAt: true,
+        shortUrl: {
+          select: {
+            id: true,
+            shortCode: true,
+            originalUrl: true,
+            createdAt: true,
+          },
+        },
+        _count: {
+          select: {
+            analytics: true,
+          },
+        },
+        analytics: {
+          orderBy: { timestamp: 'desc' },
+          take: 50,
+          select: {
+            id: true,
+            timestamp: true,
+            ipAddress: true,
+            userAgent: true,
+            shortUrlId: true,
+          },
+        },
+      },
     })
 
     if (!qrCode) {
-      return {
-        error: 'QR code not found',
-        statusCode: 404
-      }
-    }
-
-    if (qrCode.userId !== user.sub) {
-      return {
-        error: 'Unauthorized to view this QR code',
-        statusCode: 403
-      }
+      // Covers both "not found" and "not yours" without leaking which
+      throw createError({ statusCode: 404, statusMessage: 'QR code not found' })
     }
 
     return {
       success: true,
       qrCode,
-      statusCode: 200
     }
-
   } catch (error: any) {
+    if (error?.statusCode) throw error
+
     console.error('Fetch QR code error:', error)
-    return {
-      error: error?.message || 'Failed to fetch QR code',
-      statusCode: 500
-    }
+
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'Failed to fetch QR code',
+    })
   }
 })
