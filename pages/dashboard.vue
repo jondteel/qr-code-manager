@@ -1,13 +1,15 @@
+<!-- Dashboard.vue: Main dashboard page showing stats and list of QR codes -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header/Navigation -->
     <nav class="bg-white shadow-sm border-b border-gray-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
-          <div class="flex items-center gap-8">
-            <NuxtLink to="/" class="flex items-center">
+          <!-- Left side -->
+          <div class="flex items-center gap-4 md:gap-8 min-w-0">
+            <NuxtLink to="/" class="flex items-center min-w-0">
               <svg
-                class="h-8 w-8 text-blue-600"
+                class="h-8 w-8 text-blue-600 shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -16,13 +18,15 @@
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+                  d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
                 />
               </svg>
-              <span class="ml-2 text-xl font-bold text-gray-900">QR Manager</span>
+              <span class="ml-2 text-lg sm:text-xl font-bold text-gray-900 truncate"
+                >QR Manager</span
+              >
             </NuxtLink>
 
-            <!-- ✅ spaced links -->
+            <!-- Desktop links -->
             <div class="hidden md:flex items-center whitespace-nowrap">
               <NuxtLink to="/dashboard" class="text-blue-600 font-medium mr-8"
                 >Dashboard</NuxtLink
@@ -36,11 +40,95 @@
             </div>
           </div>
 
-          <div class="flex items-center gap-4">
-            <span class="text-sm text-gray-600">{{ user?.email || "Guest" }}</span>
+          <!-- Right side (desktop) -->
+          <div class="hidden md:flex items-center gap-4 min-w-0">
+            <span class="text-sm text-gray-600 max-w-[220px] truncate">{{
+              user?.email || "Guest"
+            }}</span>
             <button
               @click="signOut"
-              class="text-gray-600 hover:text-gray-900 text-sm font-medium"
+              class="text-gray-600 hover:text-gray-900 text-sm font-medium whitespace-nowrap"
+            >
+              Sign Out
+            </button>
+          </div>
+
+          <!-- Right side (mobile hamburger) -->
+          <div class="md:hidden flex items-center">
+            <button
+              type="button"
+              @click="mobileMenuOpen = !mobileMenuOpen"
+              class="inline-flex items-center justify-center rounded-lg p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition"
+              aria-label="Toggle navigation menu"
+              :aria-expanded="mobileMenuOpen ? 'true' : 'false'"
+            >
+              <svg
+                v-if="!mobileMenuOpen"
+                class="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+              <svg
+                v-else
+                class="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mobile menu panel -->
+        <div v-if="mobileMenuOpen" class="md:hidden border-t border-gray-200 py-3">
+          <div class="px-1 pb-2">
+            <p class="text-xs text-gray-500 truncate">{{ user?.email || "Guest" }}</p>
+          </div>
+
+          <div class="flex flex-col">
+            <NuxtLink
+              to="/dashboard"
+              class="px-3 py-2 rounded-lg text-sm font-medium text-blue-600 bg-blue-50"
+              @click="closeMobileMenu"
+            >
+              Dashboard
+            </NuxtLink>
+
+            <NuxtLink
+              to="/generate"
+              class="mt-1 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100"
+              @click="closeMobileMenu"
+            >
+              Generate QR
+            </NuxtLink>
+
+            <NuxtLink
+              to="/analytics"
+              class="mt-1 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100"
+              @click="closeMobileMenu"
+            >
+              Analytics
+            </NuxtLink>
+
+            <button
+              @click="handleMobileSignOut"
+              class="mt-2 w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50"
+              type="button"
             >
               Sign Out
             </button>
@@ -72,7 +160,7 @@
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+                  d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
                 />
               </svg>
             </div>
@@ -165,11 +253,13 @@
       </div>
 
       <!-- Actions Bar -->
-      <div class="flex justify-between items-center mb-6">
+      <div
+        class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6"
+      >
         <h2 class="text-2xl font-bold text-gray-900">Your QR Codes</h2>
         <NuxtLink
           to="/generate"
-          class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center gap-2"
+          class="w-full sm:w-auto justify-center bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center gap-2"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -183,9 +273,18 @@
         </NuxtLink>
       </div>
 
-      <!-- ✅ FIXED: error / grid / empty are a single v-if chain -->
+      <!-- Loading state -->
       <div
-        v-if="error"
+        v-if="pending"
+        class="mb-6 bg-white p-6 rounded-lg shadow-sm border border-gray-200"
+      >
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+        <p class="text-center text-gray-600 mt-3">Loading your QR codes...</p>
+      </div>
+
+      <!-- Error state -->
+      <div
+        v-else-if="error"
         class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 text-red-800"
       >
         Failed to load your QR codes.
@@ -202,17 +301,18 @@
           class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition"
         >
           <div class="p-6">
-            <div class="flex items-start justify-between mb-4">
-              <div class="flex-1">
-                <h3 class="font-semibold text-gray-900 mb-1">{{ qr.title }}</h3>
+            <div class="flex items-start justify-between mb-4 gap-3">
+              <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-gray-900 mb-1 truncate">{{ qr.title }}</h3>
                 <p class="text-sm text-gray-500 truncate">{{ qr.data }}</p>
               </div>
 
               <!-- Menu wrapper gets a data attr so click-outside can detect properly -->
-              <div class="relative" data-menu-root>
+              <div class="relative shrink-0" data-menu-root>
                 <button
                   @click.stop="toggleMenu(qr.id)"
                   class="text-gray-400 hover:text-gray-600"
+                  type="button"
                 >
                   <svg
                     class="w-5 h-5"
@@ -237,12 +337,14 @@
                   <button
                     @click="editQR(qr)"
                     class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-t-lg"
+                    type="button"
                   >
                     Edit
                   </button>
                   <button
                     @click="confirmDelete(qr)"
                     class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-b-lg"
+                    type="button"
                   >
                     Delete
                   </button>
@@ -260,21 +362,25 @@
               </ClientOnly>
             </div>
 
-            <div class="flex items-center justify-between text-sm text-gray-600 mb-4">
-              <span>{{ qr.analytics?.length || 0 }} scans</span>
-              <span>Created {{ formatDate(qr.createdAt) }}</span>
+            <div
+              class="flex items-center justify-between gap-2 text-sm text-gray-600 mb-4"
+            >
+              <span class="truncate">{{ qr.analytics?.length || 0 }} scans</span>
+              <span class="whitespace-nowrap">Created {{ formatDate(qr.createdAt) }}</span>
             </div>
 
             <div class="flex gap-2">
               <button
                 @click="downloadQR(qr)"
                 class="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition text-sm font-medium"
+                type="button"
               >
                 Download
               </button>
               <button
                 @click="router.push(`/analytics/${qr.id}`)"
                 class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition text-sm font-medium"
+                type="button"
               >
                 View Stats
               </button>
@@ -295,7 +401,7 @@
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="2"
-            d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+            d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
           />
         </svg>
         <h3 class="mt-2 text-sm font-semibold text-gray-900">No QR codes yet</h3>
@@ -342,6 +448,26 @@ const supabase = useSupabaseClient();
 const user = useSupabaseUser();
 const router = useRouter();
 
+// Mobile nav state
+const mobileMenuOpen = ref(false);
+
+const closeMobileMenu = () => {
+  mobileMenuOpen.value = false;
+};
+
+const handleMobileSignOut = async () => {
+  closeMobileMenu();
+  await signOut();
+};
+
+// Close mobile menu on route change (extra safety)
+watch(
+  () => router.currentRoute.value.fullPath,
+  () => {
+    mobileMenuOpen.value = false;
+  }
+);
+
 // Fetch QR codes data
 const { data: qrData, pending, error, refresh } = await useFetch("/api/qr/list");
 
@@ -385,6 +511,7 @@ const loadQrLib = async () => {
 };
 
 const renderAllQrs = async () => {
+  if (!process.client) return;
   if (!qrCodes.value.length) return;
 
   await loadQrLib();
@@ -497,7 +624,6 @@ const confirmDelete = (qr) => {
   openMenuId.value = null;
 };
 
-// Handle delete confirmation
 const handleDeleteConfirm = async () => {
   showDeleteModal.value = false;
 
