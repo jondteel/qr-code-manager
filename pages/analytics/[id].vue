@@ -1,14 +1,17 @@
-<!-- pages/analytics/[id].vue -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <nav class="bg-white shadow-sm border-b border-gray-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
-          <div class="flex items-center gap-8">
-            <NuxtLink to="/" class="flex items-center">
-              <span class="ml-2 text-xl font-bold text-gray-900">QR Manager</span>
+          <!-- Left side -->
+          <div class="flex items-center gap-4 md:gap-8 min-w-0">
+            <NuxtLink to="/" class="flex items-center min-w-0">
+              <span class="ml-2 text-lg sm:text-xl font-bold text-gray-900 truncate">
+                QR Manager
+              </span>
             </NuxtLink>
 
+            <!-- Desktop nav -->
             <div class="hidden md:flex items-center gap-x-8 whitespace-nowrap">
               <NuxtLink to="/dashboard" class="text-gray-600 hover:text-gray-900">
                 Dashboard
@@ -22,11 +25,97 @@
             </div>
           </div>
 
-          <div class="flex items-center gap-4">
-            <span class="text-sm text-gray-600">{{ user?.email || "Guest" }}</span>
+          <!-- Right side -->
+          <div class="flex items-center gap-2 sm:gap-4">
+            <!-- Hide email on small screens to reduce crowding -->
+            <span class="hidden sm:inline text-sm text-gray-600 max-w-[220px] truncate">
+              {{ user?.email || "Guest" }}
+            </span>
+
+            <!-- Desktop sign out -->
             <button
               @click="signOut"
-              class="text-gray-600 hover:text-gray-900 text-sm font-medium"
+              class="hidden md:inline text-gray-600 hover:text-gray-900 text-sm font-medium"
+            >
+              Sign Out
+            </button>
+
+            <!-- Mobile menu button -->
+            <button
+              type="button"
+              class="md:hidden inline-flex items-center justify-center rounded-lg p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+              @click="mobileMenuOpen = !mobileMenuOpen"
+              :aria-expanded="mobileMenuOpen ? 'true' : 'false'"
+              aria-label="Toggle navigation menu"
+            >
+              <svg
+                v-if="!mobileMenuOpen"
+                class="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+
+              <svg
+                v-else
+                class="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mobile menu panel -->
+        <div v-if="mobileMenuOpen" class="md:hidden pb-4 border-t border-gray-100">
+          <div class="pt-3 space-y-1">
+            <div class="px-3 py-2 text-xs text-gray-500 break-all">
+              {{ user?.email || "Guest" }}
+            </div>
+
+            <NuxtLink
+              to="/dashboard"
+              class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100"
+              @click="mobileMenuOpen = false"
+            >
+              Dashboard
+            </NuxtLink>
+
+            <NuxtLink
+              to="/generate"
+              class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100"
+              @click="mobileMenuOpen = false"
+            >
+              Generate QR
+            </NuxtLink>
+
+            <NuxtLink
+              to="/analytics"
+              class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100"
+              @click="mobileMenuOpen = false"
+            >
+              Analytics
+            </NuxtLink>
+
+            <button
+              @click="handleMobileSignOut"
+              class="w-full text-left px-3 py-2 rounded-lg text-red-600 hover:bg-red-50"
+              type="button"
             >
               Sign Out
             </button>
@@ -52,7 +141,7 @@
       </div>
 
       <!-- Period filter -->
-      <div class="mb-6 flex gap-2">
+      <div class="mb-6 flex flex-wrap gap-2">
         <button
           v-for="p in timePeriods"
           :key="p.value"
@@ -120,7 +209,9 @@
 
       <!-- Recent scans -->
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+        <div
+          class="p-6 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
+        >
           <h3 class="text-lg font-semibold text-gray-900">Recent Scans</h3>
           <span class="text-sm text-gray-500">Showing latest 50</span>
         </div>
@@ -162,16 +253,23 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, ref, watchEffect } from "vue";
+import { computed, onBeforeUnmount, ref, watch, watchEffect } from "vue";
 
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
 const router = useRouter();
 const route = useRoute();
 
+const mobileMenuOpen = ref(false);
+
 const signOut = async () => {
   await supabase.auth.signOut();
   router.push("/login");
+};
+
+const handleMobileSignOut = async () => {
+  mobileMenuOpen.value = false;
+  await signOut();
 };
 
 const timePeriods = [
@@ -228,6 +326,14 @@ const formatTs = (ts) => {
     minute: "2-digit",
   });
 };
+
+// Close mobile menu on route changes
+watch(
+  () => route.fullPath,
+  () => {
+    mobileMenuOpen.value = false;
+  }
+);
 
 // ---- Chart.js setup (same pattern as analytics overview page) ----
 const chartEl = ref(null);

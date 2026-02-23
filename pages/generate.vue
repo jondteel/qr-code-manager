@@ -1,14 +1,14 @@
-<!-- generate.vue -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header/Navigation -->
     <nav class="bg-white shadow-sm border-b border-gray-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-          <div class="flex items-center gap-8">
-            <NuxtLink to="/" class="flex items-center">
+        <div class="flex justify-between items-center h-16 gap-3">
+          <!-- Left: Brand + desktop nav -->
+          <div class="flex items-center min-w-0 gap-4 sm:gap-8">
+            <NuxtLink to="/" class="flex items-center min-w-0">
               <svg
-                class="h-8 w-8 text-blue-600"
+                class="h-8 w-8 text-blue-600 shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -20,9 +20,12 @@
                   d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
                 />
               </svg>
-              <span class="ml-2 text-xl font-bold text-gray-900">QR Manager</span>
+              <span class="ml-2 text-lg sm:text-xl font-bold text-gray-900 truncate">
+                QR Manager
+              </span>
             </NuxtLink>
 
+            <!-- Desktop nav -->
             <div class="hidden md:flex items-center gap-x-8 whitespace-nowrap">
               <NuxtLink to="/dashboard" class="text-gray-600 hover:text-gray-900">
                 Dashboard
@@ -36,21 +39,113 @@
             </div>
           </div>
 
-          <div class="flex items-center gap-4">
-            <span class="text-sm text-gray-600">{{ user?.email || "Guest" }}</span>
-            <button
-              @click="signOut"
-              class="text-gray-600 hover:text-gray-900 text-sm font-medium"
-            >
-              Sign Out
-            </button>
+          <!-- Right: desktop account / mobile menu -->
+          <div class="flex items-center gap-3 sm:gap-4">
+            <!-- Desktop account info -->
+            <div class="hidden md:flex items-center gap-4">
+              <span class="text-sm text-gray-600 max-w-[220px] truncate">
+                {{ user?.email || "Guest" }}
+              </span>
+              <button
+                @click="signOut"
+                class="text-gray-600 hover:text-gray-900 text-sm font-medium"
+              >
+                Sign Out
+              </button>
+            </div>
+
+            <!-- Mobile hamburger -->
+            <div class="md:hidden relative" data-mobile-menu-root>
+              <button
+                type="button"
+                @click.stop="mobileMenuOpen = !mobileMenuOpen"
+                class="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white p-2 text-gray-700 hover:bg-gray-50"
+                aria-label="Open navigation menu"
+                :aria-expanded="mobileMenuOpen ? 'true' : 'false'"
+              >
+                <svg
+                  v-if="!mobileMenuOpen"
+                  class="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                </svg>
+                <svg
+                  v-else
+                  class="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+
+              <!-- Mobile dropdown -->
+              <div
+                v-if="mobileMenuOpen"
+                class="absolute right-0 mt-2 w-72 max-w-[85vw] bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden"
+              >
+                <div class="px-4 py-3 border-b border-gray-100">
+                  <p class="text-xs text-gray-500">Signed in as</p>
+                  <p class="text-sm text-gray-900 break-all">
+                    {{ user?.email || "Guest" }}
+                  </p>
+                </div>
+
+                <div class="py-1">
+                  <NuxtLink
+                    to="/dashboard"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    @click="mobileMenuOpen = false"
+                  >
+                    Dashboard
+                  </NuxtLink>
+                  <NuxtLink
+                    to="/generate"
+                    class="block px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50"
+                    @click="mobileMenuOpen = false"
+                  >
+                    Generate QR
+                  </NuxtLink>
+                  <NuxtLink
+                    to="/analytics"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    @click="mobileMenuOpen = false"
+                  >
+                    Analytics
+                  </NuxtLink>
+                </div>
+
+                <div class="border-t border-gray-100 p-2">
+                  <button
+                    @click="handleMobileSignOut"
+                    class="w-full text-left px-3 py-2 rounded-md text-sm text-red-600 hover:bg-red-50"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </nav>
 
     <!-- Main -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
       <div class="mb-6">
         <h1 class="text-2xl font-bold text-gray-900">Generate a QR Code</h1>
         <p class="text-gray-600 mt-1">
@@ -61,7 +156,7 @@
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Form -->
-        <section class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <section class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
           <div class="space-y-6">
             <!-- Content -->
             <div>
@@ -74,11 +169,11 @@
                 class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Paste a URL or any text..."
               />
-              <div class="flex items-center justify-between mt-2">
+              <div class="flex items-center justify-between mt-2 gap-3">
                 <p class="text-xs text-gray-500">
                   Tip: URLs are most common (e.g., https://example.com)
                 </p>
-                <p class="text-xs text-gray-500">{{ content.length }} chars</p>
+                <p class="text-xs text-gray-500 shrink-0">{{ content.length }} chars</p>
               </div>
             </div>
 
@@ -146,12 +241,12 @@
                   <input
                     v-model="fgColor"
                     type="color"
-                    class="h-10 w-14 p-1 rounded border border-gray-300 bg-white"
+                    class="h-10 w-14 p-1 rounded border border-gray-300 bg-white shrink-0"
                   />
                   <input
                     v-model="fgColor"
                     type="text"
-                    class="flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    class="min-w-0 flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="#000000"
                   />
                 </div>
@@ -172,12 +267,12 @@
                   <input
                     v-model="bgColor"
                     type="color"
-                    class="h-10 w-14 p-1 rounded border border-gray-300 bg-white"
+                    class="h-10 w-14 p-1 rounded border border-gray-300 bg-white shrink-0"
                   />
                   <input
                     v-model="bgColor"
                     type="text"
-                    class="flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    class="min-w-0 flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="#FFFFFF"
                   />
                 </div>
@@ -220,12 +315,8 @@
                   (changes made since last save)
                 </span>
               </p>
-              <p class="text-green-700 mt-1 break-all">
-                Tracking link: {{ trackedUrl }}
-              </p>
-              <p v-if="savedQrId" class="text-green-700 mt-1">
-                QR ID: {{ savedQrId }}
-              </p>
+              <p class="text-green-700 mt-1 break-all">Tracking link: {{ trackedUrl }}</p>
+              <p v-if="savedQrId" class="text-green-700 mt-1">QR ID: {{ savedQrId }}</p>
             </div>
 
             <!-- Actions -->
@@ -237,7 +328,13 @@
                 :class="!canSave || isSaving ? 'opacity-60 cursor-not-allowed' : ''"
                 @click="saveTrackedQr"
               >
-                {{ isSaving ? "Saving…" : isDirtySinceSave ? "Save Changes" : "Save / Create QR Code" }}
+                {{
+                  isSaving
+                    ? "Saving…"
+                    : isDirtySinceSave
+                    ? "Save Changes"
+                    : "Save / Create QR Code"
+                }}
               </button>
 
               <button
@@ -260,7 +357,8 @@
             </div>
 
             <p class="text-xs text-gray-500">
-              Preview uses your direct content. Downloaded PNG uses the saved tracked short link.
+              Preview uses your direct content. Downloaded PNG uses the saved tracked short
+              link.
             </p>
 
             <p v-if="errorMessage" class="text-sm text-red-600">{{ errorMessage }}</p>
@@ -269,7 +367,7 @@
         </section>
 
         <!-- Preview -->
-        <section class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <section class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-semibold text-gray-900">Live Preview</h2>
             <div class="text-xs text-gray-500">{{ size }}×{{ size }}</div>
@@ -277,10 +375,10 @@
 
           <ClientOnly>
             <div
-              class="rounded-lg border border-gray-200 bg-gray-50 p-6 flex items-center justify-center"
+              class="rounded-lg border border-gray-200 bg-gray-50 p-4 sm:p-6 flex items-center justify-center"
             >
-              <div class="flex flex-col items-center gap-3">
-                <canvas ref="canvasRef" class="bg-white rounded" />
+              <div class="flex flex-col items-center gap-3 w-full">
+                <canvas ref="canvasRef" class="bg-white rounded max-w-full" />
                 <p class="text-xs text-gray-500 text-center">
                   {{
                     canGenerate
@@ -304,10 +402,23 @@ const supabase = useSupabaseClient();
 const user = useSupabaseUser();
 const router = useRouter();
 
+const mobileMenuOpen = ref(false);
+
 const signOut = async () => {
   await supabase.auth.signOut();
   router.push("/login");
 };
+
+const handleMobileSignOut = async () => {
+  mobileMenuOpen.value = false;
+  await signOut();
+};
+
+function onDocumentClick(e: MouseEvent) {
+  const target = e.target as HTMLElement | null;
+  if (target?.closest?.("[data-mobile-menu-root]")) return;
+  mobileMenuOpen.value = false;
+}
 
 type QRCreateResponse = {
   success?: boolean;
@@ -418,10 +529,15 @@ const currentFingerprint = computed(() => {
 });
 
 // Any change after a successful save clears the success message (but keeps saved state)
+watch([content, label, size, margin, fgColor, bgColor, errorCorrectionLevel], () => {
+  successMessage.value = "";
+});
+
+// Close mobile menu on route change (if user navigates)
 watch(
-  [content, label, size, margin, fgColor, bgColor, errorCorrectionLevel],
+  () => router.currentRoute.value.fullPath,
   () => {
-    successMessage.value = "";
+    mobileMenuOpen.value = false;
   }
 );
 
@@ -443,7 +559,6 @@ function clearCanvas() {
 async function renderQr() {
   const requestId = ++renderRequestId;
 
-  // Don't wipe save/download state messages here; only clear hard errors if render succeeds/fails
   if (!canGenerate.value) {
     clearCanvas();
     return;
@@ -478,17 +593,18 @@ function scheduleRender(delay = 120) {
 }
 
 watch([content, size, margin, fgColor, bgColor, errorCorrectionLevel], () => {
-  // Clear previous render-related error before trying again
   errorMessage.value = "";
   scheduleRender();
 });
 
 onMounted(() => {
   renderQr();
+  document.addEventListener("click", onDocumentClick);
 });
 
 onBeforeUnmount(() => {
   if (renderTimer) clearTimeout(renderTimer);
+  document.removeEventListener("click", onDocumentClick);
 });
 
 // ---- Actions ----
@@ -510,9 +626,7 @@ function resetToDefaults() {
   errorMessage.value = "";
   successMessage.value = "";
 
-  // reset saved state too because form is reset
   resetSavedState();
-  // no manual render; watcher handles it
 }
 
 async function saveTrackedQr() {
@@ -526,6 +640,31 @@ async function saveTrackedQr() {
   successMessage.value = "";
 
   try {
+    // If we've already saved once, update the existing QR instead of creating a new one
+    if (savedQrId.value) {
+      const updateResponse = await $fetch<any>(`/api/qr/${savedQrId.value}`, {
+        method: "PUT",
+        body: {
+          title: label.value.trim(),
+          data: content.value.trim(),
+          size: size.value,
+          fgColor: safeFgColor.value,
+          bgColor: safeBgColor.value,
+          errorLevel: errorCorrectionLevel.value,
+        },
+      });
+
+      if (updateResponse?.error) {
+        throw new Error(updateResponse.error);
+      }
+
+      // Keep same short code (tracked link remains tied to this QR)
+      lastSavedFingerprint.value = currentFingerprint.value;
+      successMessage.value = "Tracked QR updated successfully. You can now download the PNG.";
+      return;
+    }
+
+    // First save -> create QR + tracked short URL
     const qrResponse = await $fetch<QRCreateResponse>("/api/qr/create", {
       method: "POST",
       body: {

@@ -5,10 +5,11 @@
     <nav class="bg-white shadow-sm border-b border-gray-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
-          <div class="flex items-center gap-8">
-            <NuxtLink to="/" class="flex items-center">
+          <!-- Left -->
+          <div class="flex items-center gap-4 md:gap-8 min-w-0">
+            <NuxtLink to="/" class="flex items-center min-w-0">
               <svg
-                class="h-8 w-8 text-blue-600"
+                class="h-8 w-8 text-blue-600 shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -20,27 +21,115 @@
                   d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
                 />
               </svg>
-              <span class="ml-2 text-xl font-bold text-gray-900">QR Manager</span>
+              <span class="ml-2 text-lg sm:text-xl font-bold text-gray-900 truncate">
+                QR Manager
+              </span>
             </NuxtLink>
 
+            <!-- Desktop nav -->
             <div class="hidden md:flex items-center gap-x-8 whitespace-nowrap">
-              <NuxtLink to="/dashboard" class="text-gray-600 hover:text-gray-900"
-                >Dashboard</NuxtLink
-              >
-              <NuxtLink to="/generate" class="text-gray-600 hover:text-gray-900"
-                >Generate QR</NuxtLink
-              >
-              <NuxtLink to="/analytics" class="text-gray-600 hover:text-gray-900"
-                >Analytics</NuxtLink
-              >
+              <NuxtLink to="/dashboard" class="text-gray-600 hover:text-gray-900">
+                Dashboard
+              </NuxtLink>
+              <NuxtLink to="/generate" class="text-gray-600 hover:text-gray-900">
+                Generate QR
+              </NuxtLink>
+              <NuxtLink to="/analytics" class="text-gray-600 hover:text-gray-900">
+                Analytics
+              </NuxtLink>
             </div>
           </div>
 
-          <div class="flex items-center gap-4">
-            <span class="text-sm text-gray-600">{{ user?.email || "Guest" }}</span>
+          <!-- Right -->
+          <div class="flex items-center gap-2 sm:gap-4">
+            <span class="hidden sm:inline text-sm text-gray-600 max-w-[220px] truncate">
+              {{ user?.email || "Guest" }}
+            </span>
+
+            <!-- Desktop sign out -->
             <button
               @click="signOut"
-              class="text-gray-600 hover:text-gray-900 text-sm font-medium"
+              class="hidden md:inline text-gray-600 hover:text-gray-900 text-sm font-medium"
+            >
+              Sign Out
+            </button>
+
+            <!-- Mobile hamburger -->
+            <button
+              type="button"
+              class="md:hidden inline-flex items-center justify-center rounded-lg p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+              @click="mobileMenuOpen = !mobileMenuOpen"
+              :aria-expanded="mobileMenuOpen ? 'true' : 'false'"
+              aria-label="Toggle navigation menu"
+            >
+              <svg
+                v-if="!mobileMenuOpen"
+                class="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+
+              <svg
+                v-else
+                class="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mobile menu panel -->
+        <div v-if="mobileMenuOpen" class="md:hidden pb-4 border-t border-gray-100">
+          <div class="pt-3 space-y-1">
+            <div class="px-3 py-2 text-xs text-gray-500 break-all">
+              {{ user?.email || "Guest" }}
+            </div>
+
+            <NuxtLink
+              to="/dashboard"
+              class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100"
+              @click="mobileMenuOpen = false"
+            >
+              Dashboard
+            </NuxtLink>
+
+            <NuxtLink
+              to="/generate"
+              class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100"
+              @click="mobileMenuOpen = false"
+            >
+              Generate QR
+            </NuxtLink>
+
+            <NuxtLink
+              to="/analytics"
+              class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100"
+              @click="mobileMenuOpen = false"
+            >
+              Analytics
+            </NuxtLink>
+
+            <button
+              @click="handleMobileSignOut"
+              class="w-full text-left px-3 py-2 rounded-lg text-red-600 hover:bg-red-50"
+              type="button"
             >
               Sign Out
             </button>
@@ -106,9 +195,9 @@
 
             <!-- Description -->
             <div>
-              <label class="block text-sm font-medium text-gray-900 mb-1"
-                >Description (optional)</label
-              >
+              <label class="block text-sm font-medium text-gray-900 mb-1">
+                Description (optional)
+              </label>
               <textarea
                 v-model="form.description"
                 rows="3"
@@ -133,19 +222,19 @@
             </div>
 
             <!-- Colors -->
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-medium text-gray-900 mb-1">Foreground</label>
                 <div class="flex items-center gap-3">
                   <input
                     v-model="form.fgColor"
                     type="color"
-                    class="h-10 w-14 p-1 rounded border border-gray-300"
+                    class="h-10 w-14 p-1 rounded border border-gray-300 bg-white"
                   />
                   <input
                     v-model="form.fgColor"
                     type="text"
-                    class="flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="flex-1 min-w-0 rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -156,12 +245,12 @@
                   <input
                     v-model="form.bgColor"
                     type="color"
-                    class="h-10 w-14 p-1 rounded border border-gray-300"
+                    class="h-10 w-14 p-1 rounded border border-gray-300 bg-white"
                   />
                   <input
                     v-model="form.bgColor"
                     type="text"
-                    class="flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="flex-1 min-w-0 rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -182,7 +271,7 @@
             </div>
 
             <!-- Actions -->
-            <div class="flex gap-3">
+            <div class="flex flex-col sm:flex-row gap-3">
               <button
                 type="submit"
                 :disabled="saving"
@@ -211,24 +300,24 @@
             <div
               class="rounded-lg border border-gray-200 bg-gray-50 p-6 flex items-center justify-center"
             >
-              <canvas ref="canvasRef" class="bg-white rounded"></canvas>
+              <canvas ref="canvasRef" class="bg-white rounded max-w-full"></canvas>
             </div>
           </ClientOnly>
 
           <div class="mt-6">
             <h3 class="text-sm font-semibold text-gray-900 mb-2">QR Code Info</h3>
             <dl class="space-y-2 text-sm">
-              <div class="flex justify-between">
+              <div class="flex justify-between gap-3">
                 <dt class="text-gray-600">Created:</dt>
-                <dd class="text-gray-900">{{ formatDate(qrCode.createdAt) }}</dd>
+                <dd class="text-gray-900 text-right">{{ formatDate(qrCode.createdAt) }}</dd>
               </div>
-              <div class="flex justify-between">
+              <div class="flex justify-between gap-3">
                 <dt class="text-gray-600">Total Scans:</dt>
-                <dd class="text-gray-900">{{ qrCode.analytics?.length || 0 }}</dd>
+                <dd class="text-gray-900 text-right">{{ qrCode.analytics?.length || 0 }}</dd>
               </div>
-              <div v-if="qrCode.shortUrl" class="flex justify-between">
+              <div v-if="qrCode.shortUrl" class="flex justify-between gap-3">
                 <dt class="text-gray-600">Short URL:</dt>
-                <dd class="text-gray-900 truncate">/s/{{ qrCode.shortUrl.shortCode }}</dd>
+                <dd class="text-gray-900 truncate text-right">/s/{{ qrCode.shortUrl.shortCode }}</dd>
               </div>
             </dl>
           </div>
@@ -246,10 +335,25 @@ const router = useRouter();
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
 
+const mobileMenuOpen = ref(false);
+
 const signOut = async () => {
   await supabase.auth.signOut();
   router.push("/login");
 };
+
+const handleMobileSignOut = async () => {
+  mobileMenuOpen.value = false;
+  await signOut();
+};
+
+// Close mobile menu on route changes
+watch(
+  () => route.fullPath,
+  () => {
+    mobileMenuOpen.value = false;
+  }
+);
 
 // ✅ Make id reactive so client-side route changes refetch correctly
 const id = computed(() => String(route.params.id ?? ""));
@@ -423,8 +527,6 @@ const saveChanges = async () => {
     }, 1500);
   } catch (err) {
     console.error("Save error:", err);
-    // Optional: surface a server-provided message if present
-    // saveError.value = err?.data?.statusMessage || err?.message || "Failed to save changes";
     saveError.value = "Failed to save changes";
   } finally {
     saving.value = false;

@@ -1,29 +1,136 @@
-<!-- analytics.vue -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header/Navigation -->
     <nav class="bg-white shadow-sm border-b border-gray-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
-          <div class="flex items-center gap-8">
-            <NuxtLink to="/" class="flex items-center">
-              <svg class="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+          <!-- Left side -->
+          <div class="flex items-center gap-4 md:gap-8 min-w-0">
+            <NuxtLink to="/" class="flex items-center min-w-0">
+              <svg
+                class="h-8 w-8 text-blue-600 shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+                />
               </svg>
-              <span class="ml-2 text-xl font-bold text-gray-900">QR Manager</span>
+              <span class="ml-2 text-lg sm:text-xl font-bold text-gray-900 truncate">
+                QR Manager
+              </span>
             </NuxtLink>
 
+            <!-- Desktop nav -->
             <div class="hidden md:flex items-center whitespace-nowrap">
-              <NuxtLink to="/dashboard" class="text-gray-600 hover:text-gray-900 mr-8">Dashboard</NuxtLink>
-              <NuxtLink to="/generate" class="text-gray-600 hover:text-gray-900 mr-8">Generate QR</NuxtLink>
-              <NuxtLink to="/analytics" class="text-blue-600 font-medium">Analytics</NuxtLink>
+              <NuxtLink to="/dashboard" class="text-gray-600 hover:text-gray-900 mr-8">
+                Dashboard
+              </NuxtLink>
+              <NuxtLink to="/generate" class="text-gray-600 hover:text-gray-900 mr-8">
+                Generate QR
+              </NuxtLink>
+              <NuxtLink to="/analytics" class="text-blue-600 font-medium">
+                Analytics
+              </NuxtLink>
             </div>
           </div>
 
-          <div class="flex items-center gap-4">
-            <span class="text-sm text-gray-600">{{ user?.email || 'Guest' }}</span>
-            <button @click="signOut" class="text-gray-600 hover:text-gray-900 text-sm font-medium">
+          <!-- Right side -->
+          <div class="flex items-center gap-2 sm:gap-4">
+            <!-- Hide email on small screens to avoid crowding -->
+            <span class="hidden sm:inline text-sm text-gray-600 max-w-[220px] truncate">
+              {{ user?.email || 'Guest' }}
+            </span>
+
+            <!-- Desktop sign out -->
+            <button
+              @click="signOut"
+              class="hidden md:inline text-gray-600 hover:text-gray-900 text-sm font-medium"
+            >
+              Sign Out
+            </button>
+
+            <!-- Mobile hamburger -->
+            <button
+              type="button"
+              class="md:hidden inline-flex items-center justify-center rounded-lg p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+              @click="mobileMenuOpen = !mobileMenuOpen"
+              :aria-expanded="mobileMenuOpen ? 'true' : 'false'"
+              aria-label="Toggle navigation menu"
+            >
+              <svg
+                v-if="!mobileMenuOpen"
+                class="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+
+              <svg
+                v-else
+                class="h-6 w-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mobile menu panel -->
+        <div v-if="mobileMenuOpen" class="md:hidden pb-4 border-t border-gray-100">
+          <div class="pt-3 space-y-1">
+            <div class="px-3 py-2 text-xs text-gray-500 break-all">
+              {{ user?.email || "Guest" }}
+            </div>
+
+            <NuxtLink
+              to="/dashboard"
+              class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100"
+              @click="mobileMenuOpen = false"
+            >
+              Dashboard
+            </NuxtLink>
+
+            <NuxtLink
+              to="/generate"
+              class="block px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100"
+              @click="mobileMenuOpen = false"
+            >
+              Generate QR
+            </NuxtLink>
+
+            <NuxtLink
+              to="/analytics"
+              class="block px-3 py-2 rounded-lg bg-blue-50 text-blue-700 font-medium"
+              @click="mobileMenuOpen = false"
+            >
+              Analytics
+            </NuxtLink>
+
+            <button
+              @click="handleMobileSignOut"
+              class="w-full text-left px-3 py-2 rounded-lg text-red-600 hover:bg-red-50"
+              type="button"
+            >
               Sign Out
             </button>
           </div>
@@ -94,7 +201,7 @@
           </div>
         </div>
 
-        <!-- ✅ Scans Over Time Chart -->
+        <!-- Scans Over Time Chart -->
         <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-gray-900">Scans Over Time</h3>
@@ -132,12 +239,12 @@
               :key="qr.id"
               class="p-6 hover:bg-gray-50 transition"
             >
-              <div class="flex items-center justify-between">
-                <div class="flex-1">
-                  <h4 class="font-semibold text-gray-900">{{ qr.title }}</h4>
-                  <p class="text-sm text-gray-500 mt-1">{{ qr.data }}</p>
+              <div class="flex items-start sm:items-center justify-between gap-3">
+                <div class="flex-1 min-w-0">
+                  <h4 class="font-semibold text-gray-900 truncate">{{ qr.title }}</h4>
+                  <p class="text-sm text-gray-500 mt-1 truncate">{{ qr.data }}</p>
                 </div>
-                <div class="text-right ml-4">
+                <div class="text-right ml-2 sm:ml-4 shrink-0">
                   <p class="text-2xl font-bold text-gray-900">{{ qr.scanCount }}</p>
                   <p class="text-xs text-gray-500">scans</p>
                 </div>
@@ -156,11 +263,27 @@ import { computed, onBeforeUnmount, ref, watch, watchEffect } from "vue";
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
 const router = useRouter();
+const route = useRoute();
+
+const mobileMenuOpen = ref(false);
 
 const signOut = async () => {
   await supabase.auth.signOut();
   router.push("/login");
 };
+
+const handleMobileSignOut = async () => {
+  mobileMenuOpen.value = false;
+  await signOut();
+};
+
+// Close mobile menu on route changes
+watch(
+  () => route.fullPath,
+  () => {
+    mobileMenuOpen.value = false;
+  }
+);
 
 const timePeriods = [
   { label: "7 Days", value: 7 },
