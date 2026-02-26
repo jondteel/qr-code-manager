@@ -227,7 +227,7 @@
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { renderQrToPngBlob } from "~/server/utils/qrToBlob.ts";
+import { canvasToPngBlob } from "~/server/utils/qrToBlob.ts";
 import { downloadPngBlob } from "~/server/utils/downloadQrPng";
 
 const route = useRoute();
@@ -417,7 +417,7 @@ const downloadPng = async () => {
       ? `${window.location.origin}/s/${qrCode.value.shortUrl.shortCode}`
       : qrCode.value.data;
 
-    const blob = await renderQrToPngBlob({
+    const blob = await canvasToPngBlob({
       text,
       size: form.value.size,
       margin: 2,
