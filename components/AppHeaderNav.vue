@@ -19,7 +19,7 @@
               />
             </svg>
             <span class="ml-2 text-lg sm:text-xl font-bold text-gray-900 truncate">
-              QR Manager
+              {{ BRAND_NAME }}
             </span>
           </NuxtLink>
 
@@ -160,6 +160,7 @@
 
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { BRAND_NAME } from "~/utils/brand";
 
 type NavTab = "dashboard" | "generate" | "analytics" | null;
 
