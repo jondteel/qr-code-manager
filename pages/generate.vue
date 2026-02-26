@@ -256,6 +256,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { downloadPngBlob } from "~/server/utils/downloadQrPng";
 
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
@@ -590,18 +591,21 @@ async function downloadSavedPng() {
       },
     });
 
-    const dataUrl = canvas.toDataURL("image/png");
-    const safeLabel =
-      label.value.trim().replace(/[^\w\-]+/g, "_").slice(0, 60) || "qr_code";
+    // ✅ Canvas -> Blob (mobile-friendly)
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        (b) => (b ? resolve(b) : reject(new Error("Failed to create PNG blob"))),
+        "image/png"
+      );
+    });
 
-    const a = document.createElement("a");
-    a.href = dataUrl;
-    a.download = `${safeLabel}.png`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    await downloadPngBlob(blob, {
+      filename: toSafeFilename(label.value),
+      preferShare: true,
+      openInNewTabFallback: true,
+    });
 
-    successMessage.value = "PNG downloaded.";
+    successMessage.value = "PNG ready to save.";
 
     // Re-render preview back to direct content (your intended behavior)
     await renderQr();
@@ -610,5 +614,12 @@ async function downloadSavedPng() {
   } finally {
     isDownloading.value = false;
   }
+}
+function toSafeFilename(raw: string) {
+  const base = String(raw ?? "qr_code")
+    .trim()
+    .replace(/[^\w\-]+/g, "_")
+    .slice(0, 60);
+  return base.length ? `${base}.png` : "qr_code.png";
 }
 </script>

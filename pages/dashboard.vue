@@ -14,20 +14,13 @@
               <p class="text-sm text-gray-600 mb-1">Total QR Codes</p>
               <p class="text-3xl font-bold text-gray-900">{{ stats.totalQRCodes }}</p>
             </div>
-            <div
-              class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center"
-            >
-              <svg
-                class="w-6 h-6 text-blue-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+                  d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
                 />
               </svg>
             </div>
@@ -40,15 +33,8 @@
               <p class="text-sm text-gray-600 mb-1">Short URLs</p>
               <p class="text-3xl font-bold text-gray-900">{{ stats.totalShortUrls }}</p>
             </div>
-            <div
-              class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center"
-            >
-              <svg
-                class="w-6 h-6 text-indigo-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+            <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -66,21 +52,9 @@
               <p class="text-sm text-gray-600 mb-1">Total Scans</p>
               <p class="text-3xl font-bold text-gray-900">{{ stats.totalScans }}</p>
             </div>
-            <div
-              class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center"
-            >
-              <svg
-                class="w-6 h-6 text-purple-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
+            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -98,15 +72,8 @@
               <p class="text-sm text-gray-600 mb-1">This Month</p>
               <p class="text-3xl font-bold text-gray-900">{{ stats.thisMonthScans }}</p>
             </div>
-            <div
-              class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center"
-            >
-              <svg
-                class="w-6 h-6 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
@@ -120,48 +87,32 @@
       </div>
 
       <!-- Actions Bar -->
-      <div
-        class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6"
-      >
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
         <h2 class="text-2xl font-bold text-gray-900">Your QR Codes</h2>
         <NuxtLink
           to="/generate"
           class="w-full sm:w-auto justify-center bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center gap-2"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 4v16m8-8H4"
-            />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
           Create New QR Code
         </NuxtLink>
       </div>
 
       <!-- Loading state -->
-      <div
-        v-if="pending"
-        class="mb-6 bg-white p-6 rounded-lg shadow-sm border border-gray-200"
-      >
+      <div v-if="pending" class="mb-6 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
         <p class="text-center text-gray-600 mt-3">Loading your QR codes...</p>
       </div>
 
       <!-- Error state -->
-      <div
-        v-else-if="error"
-        class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 text-red-800"
-      >
+      <div v-else-if="error" class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
         Failed to load your QR codes.
       </div>
 
       <!-- QR Codes Grid -->
-      <div
-        v-else-if="qrCodes.length > 0"
-        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-      >
+      <div v-else-if="qrCodes.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div
           v-for="qr in qrCodes"
           :key="qr.id"
@@ -174,19 +125,9 @@
                 <p class="text-sm text-gray-500 truncate">{{ qr.data }}</p>
               </div>
 
-              <!-- Menu wrapper gets a data attr so click-outside can detect properly -->
               <div class="relative shrink-0" data-menu-root>
-                <button
-                  @click.stop="toggleMenu(qr.id)"
-                  class="text-gray-400 hover:text-gray-600"
-                  type="button"
-                >
-                  <svg
-                    class="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
+                <button @click.stop="toggleMenu(qr.id)" class="text-gray-400 hover:text-gray-600" type="button">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"
@@ -196,7 +137,6 @@
                   </svg>
                 </button>
 
-                <!-- Dropdown Menu -->
                 <div
                   v-if="openMenuId === qr.id"
                   class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10"
@@ -221,17 +161,11 @@
 
             <div class="bg-gray-50 rounded-lg p-4 mb-4 flex items-center justify-center">
               <ClientOnly>
-                <!-- ✅ FIXED: real ref mapping by id (no querySelectorAll / no index assumptions) -->
-                <canvas
-                  :ref="(el) => setCanvasRef(qr.id, el)"
-                  class="bg-white rounded"
-                ></canvas>
+                <canvas :ref="(el) => setCanvasRef(qr.id, el)" class="bg-white rounded"></canvas>
               </ClientOnly>
             </div>
 
-            <div
-              class="flex items-center justify-between gap-2 text-sm text-gray-600 mb-4"
-            >
+            <div class="flex items-center justify-between gap-2 text-sm text-gray-600 mb-4">
               <span class="truncate">{{ qr.analytics?.length || 0 }} scans</span>
               <span class="whitespace-nowrap">Created {{ formatDate(qr.createdAt) }}</span>
             </div>
@@ -258,23 +192,16 @@
 
       <!-- Empty state -->
       <div v-else class="text-center py-12">
-        <svg
-          class="mx-auto h-12 w-12 text-gray-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="2"
-            d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+            d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
           />
         </svg>
         <h3 class="mt-2 text-sm font-semibold text-gray-900">No QR codes yet</h3>
-        <p class="mt-1 text-sm text-gray-500">
-          Get started by creating your first QR code.
-        </p>
+        <p class="mt-1 text-sm text-gray-500">Get started by creating your first QR code.</p>
         <div class="mt-6">
           <NuxtLink
             to="/generate"
@@ -299,41 +226,26 @@
     />
 
     <!-- Toast Notifications -->
-    <Toast
-      :show="toast.show"
-      :message="toast.message"
-      :type="toast.type"
-      @close="toast.show = false"
-    />
+    <Toast :show="toast.show" :message="toast.message" :type="toast.type" @close="toast.show = false" />
   </div>
 </template>
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { downloadPngBlob } from "~/utils/downloadQrPng";
+
+// If you prefer: keep this helper near the download handler.
+const toSafeFilename = (raw) => {
+  const base = String(raw ?? "qr_code")
+    .trim()
+    .replace(/[^\w\-]+/g, "_")
+    .slice(0, 60);
+  return base.length ? `${base}.png` : "qr_code.png";
+};
 
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
 const router = useRouter();
-
-// Mobile nav state
-const mobileMenuOpen = ref(false);
-
-const closeMobileMenu = () => {
-  mobileMenuOpen.value = false;
-};
-
-const handleMobileSignOut = async () => {
-  closeMobileMenu();
-  await signOut();
-};
-
-// Close mobile menu on route change (extra safety)
-watch(
-  () => router.currentRoute.value.fullPath,
-  () => {
-    mobileMenuOpen.value = false;
-  }
-);
 
 // Fetch QR codes data
 const { data: qrData, pending, error, refresh } = await useFetch("/api/qr/list");
@@ -358,7 +270,7 @@ const signOut = async () => {
 // Import QRCode library
 let QRCodeLib = null;
 
-// ✅ FIXED: map canvas elements by QR id
+// map canvas elements by QR id
 const canvasMap = ref({}); // { [qrId]: HTMLCanvasElement }
 const setCanvasRef = (id, el) => {
   if (el) canvasMap.value[id] = el;
@@ -388,9 +300,7 @@ const renderAllQrs = async () => {
     const canvas = canvasMap.value[qr.id];
     if (!canvas) continue;
 
-    const url = qr.shortUrl
-      ? `${window.location.origin}/s/${qr.shortUrl.shortCode}`
-      : qr.data;
+    const url = qr.shortUrl ? `${window.location.origin}/s/${qr.shortUrl.shortCode}` : qr.data;
 
     await QRCodeLib.toCanvas(canvas, url, {
       width: 128,
@@ -408,11 +318,10 @@ onMounted(async () => {
   await renderAllQrs();
 });
 
-// ✅ Re-render any time the list changes (after refresh/delete/create)
+// Re-render any time the list changes
 watch(
   () => qrCodes.value.map((q) => q.id).join(","),
   async () => {
-    // remove canvases for deleted items to prevent stale refs
     const ids = new Set(qrCodes.value.map((q) => q.id));
     for (const key of Object.keys(canvasMap.value)) {
       if (!ids.has(key)) delete canvasMap.value[key];
@@ -421,14 +330,14 @@ watch(
   }
 );
 
-// Download function
+// ✅ Download function (mobile-friendly)
 const downloadQR = async (qr) => {
   await loadQrLib();
 
+  // Render to an offscreen canvas so we can create a Blob
   const canvas = document.createElement("canvas");
-  const url = qr.shortUrl
-    ? `${window.location.origin}/s/${qr.shortUrl.shortCode}`
-    : qr.data;
+
+  const url = qr.shortUrl ? `${window.location.origin}/s/${qr.shortUrl.shortCode}` : qr.data;
 
   await QRCodeLib.toCanvas(canvas, url, {
     width: qr.size,
@@ -440,11 +349,15 @@ const downloadQR = async (qr) => {
     },
   });
 
-  const dataUrl = canvas.toDataURL("image/png");
-  const a = document.createElement("a");
-  a.href = dataUrl;
-  a.download = `${qr.title.replace(/[^\w\-]+/g, "_")}.png`;
-  a.click();
+  const blob = await new Promise((resolve, reject) => {
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Failed to create PNG blob"))), "image/png");
+  });
+
+  await downloadPngBlob(blob, {
+    filename: toSafeFilename(qr.title),
+    preferShare: true,
+    openInNewTabFallback: true,
+  });
 };
 
 // Menu state
@@ -454,7 +367,6 @@ const toggleMenu = (id) => {
   openMenuId.value = openMenuId.value === id ? null : id;
 };
 
-// ✅ FIXED: click-outside detection + cleanup listener
 const onDocClick = (e) => {
   const target = e.target;
   if (target && target.closest && target.closest("[data-menu-root]")) return;
@@ -480,7 +392,6 @@ const toast = ref({
   type: "info",
 });
 
-// Show toast helper
 const showToast = (message, type = "info") => {
   toast.value = { show: true, message, type };
 };

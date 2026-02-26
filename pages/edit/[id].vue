@@ -1,4 +1,4 @@
-<!-- [id].vue - Edit QR Code Page -->
+<!-- pages/edit/[id].vue - Edit QR Code Page -->
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Header/Navigation -->
@@ -12,7 +12,12 @@
           class="text-blue-600 hover:text-blue-700 text-sm flex items-center gap-1 mb-4"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
           Back to Dashboard
         </NuxtLink>
@@ -34,7 +39,6 @@
       <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Form -->
         <section class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <!-- ✅ Use a real form so Enter submits + native UX -->
           <form class="space-y-6" @submit.prevent="saveChanges">
             <!-- Title -->
             <div>
@@ -160,7 +164,31 @@
 
         <!-- Preview -->
         <section class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 class="text-lg font-semibold text-gray-900 mb-4">Preview</h2>
+          <div class="flex items-center justify-between gap-3 mb-4">
+            <h2 class="text-lg font-semibold text-gray-900">Preview</h2>
+
+            <button
+              type="button"
+              @click="downloadPng"
+              :disabled="downloading || !qrCode?.id"
+              class="shrink-0 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <svg
+                class="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 3v12m0 0l4-4m-4 4l-4-4M4 17v3h16v-3"
+                />
+              </svg>
+              {{ downloading ? "Preparing…" : "Download PNG" }}
+            </button>
+          </div>
 
           <ClientOnly>
             <div
@@ -169,6 +197,10 @@
               <canvas ref="canvasRef" class="bg-white rounded max-w-full"></canvas>
             </div>
           </ClientOnly>
+
+          <p v-if="downloadError" class="text-sm text-red-600 mt-3">
+            {{ downloadError }}
+          </p>
 
           <div class="mt-6">
             <h3 class="text-sm font-semibold text-gray-900 mb-2">QR Code Info</h3>
@@ -195,42 +227,24 @@
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { renderQrToPngBlob } from "~/utils/qrToPngBlob";
+import { downloadPngBlob } from "~/utils/downloadQrPng";
 
 const route = useRoute();
 const router = useRouter();
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
 
-const mobileMenuOpen = ref(false);
-
 const signOut = async () => {
   await supabase.auth.signOut();
   router.push("/login");
 };
 
-const handleMobileSignOut = async () => {
-  mobileMenuOpen.value = false;
-  await signOut();
-};
-
-// Close mobile menu on route changes
-watch(
-  () => route.fullPath,
-  () => {
-    mobileMenuOpen.value = false;
-  }
-);
-
-// ✅ Make id reactive so client-side route changes refetch correctly
 const id = computed(() => String(route.params.id ?? ""));
 
-// ✅ useFetch with a function so it reacts to id changes
-const {
-  data: qrData,
-  pending: loading,
-  error: fetchError,
-  refresh,
-} = await useFetch(() => `/api/qr/${id.value}`);
+const { data: qrData, pending: loading, error: fetchError, refresh } = await useFetch(
+  () => `/api/qr/${id.value}`
+);
 
 const qrCode = computed(() => qrData.value?.qrCode || {});
 const error = computed(() => fetchError.value?.message || qrData.value?.error);
@@ -268,7 +282,7 @@ const saving = ref(false);
 const saveError = ref("");
 const saveSuccess = ref(false);
 
-// QR Code library + canvas ref
+// Preview rendering
 const canvasRef = ref(null);
 let QRCodeLib = null;
 
@@ -279,7 +293,6 @@ const loadQrLib = async () => {
   return QRCodeLib;
 };
 
-// ✅ Debounced preview rendering
 let previewTimer = null;
 const DEBOUNCE_MS = 200;
 
@@ -297,7 +310,6 @@ const renderPreviewNow = async () => {
   await loadQrLib();
   await nextTick();
 
-  // Guard again after await (route could have changed)
   if (!canvasRef.value || !qrCode.value?.id) return;
 
   const url = qrCode.value.shortUrl
@@ -322,25 +334,18 @@ const schedulePreview = () => {
   }, DEBOUNCE_MS);
 };
 
-// ✅ Render when mounted (canvas exists)
 onMounted(() => {
   schedulePreview();
 });
 
-// ✅ Render when qrCode loads/changes
 watch(
   () => qrCode.value?.id,
-  () => {
-    schedulePreview();
-  }
+  () => schedulePreview()
 );
 
-// ✅ Render when any form field changes (debounced)
 watch(
   form,
-  () => {
-    schedulePreview();
-  },
+  () => schedulePreview(),
   { deep: true }
 );
 
@@ -363,7 +368,6 @@ const saveChanges = async () => {
   saveError.value = "";
   saveSuccess.value = false;
 
-  // ✅ Basic validation (since we're not relying solely on browser validation)
   if (!form.value.title?.trim()) {
     saveError.value = "Title is required";
     return;
@@ -384,7 +388,6 @@ const saveChanges = async () => {
       },
     });
 
-    // ✅ Keep local view consistent (optional) by refreshing
     await refresh();
 
     saveSuccess.value = true;
@@ -396,6 +399,42 @@ const saveChanges = async () => {
     saveError.value = "Failed to save changes";
   } finally {
     saving.value = false;
+  }
+};
+
+// ---- Download (mobile-friendly) ----
+const downloading = ref(false);
+const downloadError = ref("");
+
+const downloadPng = async () => {
+  downloadError.value = "";
+  if (!qrCode.value?.id) return;
+
+  try {
+    downloading.value = true;
+
+    const text = qrCode.value.shortUrl?.shortCode
+      ? `${window.location.origin}/s/${qrCode.value.shortUrl.shortCode}`
+      : qrCode.value.data;
+
+    const blob = await renderQrToPngBlob({
+      text,
+      size: form.value.size,
+      margin: 2,
+      fgColor: form.value.fgColor,
+      bgColor: form.value.bgColor,
+      errorLevel: form.value.errorLevel,
+    });
+
+    const safeName =
+      (form.value.title || "qr_code").trim().replace(/[^\w\-]+/g, "_").slice(0, 60) + ".png";
+
+    await downloadPngBlob(blob, { filename: safeName, preferShare: true, openInNewTabFallback: true });
+  } catch (e) {
+    console.error("Download error:", e);
+    downloadError.value = "Failed to download PNG.";
+  } finally {
+    downloading.value = false;
   }
 };
 </script>
