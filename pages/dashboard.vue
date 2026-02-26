@@ -232,7 +232,7 @@
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { downloadPngBlob } from "~/utils/downloadQrPng";
+import { downloadPngBlob } from "/server/utils/downloadQrPng";
 
 // If you prefer: keep this helper near the download handler.
 const toSafeFilename = (raw) => {

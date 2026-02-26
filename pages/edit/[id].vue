@@ -227,8 +227,8 @@
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { renderQrToPngBlob } from "~/utils/qrToPngBlob";
-import { downloadPngBlob } from "~/utils/downloadQrPng";
+import { renderQrToPngBlob } from "~/server/utils/qrToBlob.ts";
+import { downloadPngBlob } from "~/server/utils/downloadQrPng";
 
 const route = useRoute();
 const router = useRouter();
