@@ -14,7 +14,37 @@
         <div v-if="pending" class="text-gray-600">Loading…</div>
         <div v-else>
           <h1 class="text-2xl font-bold text-gray-900">{{ qrTitle }}</h1>
-          <p class="text-gray-600 mt-1 truncate">{{ qrSubtitle }}</p>
+          <p class="text-gray-600 mt-1 truncate">{{ qrDestination }}</p>
+          <div
+            v-if="publicShortLink"
+            class="mt-3 rounded-lg border border-indigo-100 bg-indigo-50 p-3"
+          >
+            <p class="text-xs font-medium uppercase text-indigo-700 mb-1">Short link</p>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <a
+                :href="publicShortLink"
+                class="min-w-0 flex-1 truncate text-sm font-medium text-indigo-900 hover:text-indigo-700"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {{ publicShortLink }}
+              </a>
+              <button
+                @click="copyPublicShortLink"
+                class="shrink-0 rounded-md border border-indigo-200 bg-white px-3 py-1.5 text-sm font-medium text-indigo-700 hover:bg-indigo-100 transition"
+                type="button"
+              >
+                {{ copiedShortLink ? "Copied" : "Copy" }}
+              </button>
+            </div>
+            <p
+              v-if="copyMessage"
+              class="mt-2 text-xs"
+              :class="copyMessageType === 'error' ? 'text-red-600' : 'text-indigo-700'"
+            >
+              {{ copyMessage }}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -131,12 +161,13 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, ref, watch, watchEffect } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch, watchEffect } from "vue";
 
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
 const router = useRouter();
 const route = useRoute();
+const appOrigin = ref("");
 
 const mobileMenuOpen = ref(false);
 
@@ -187,11 +218,47 @@ const series = computed(() => data.value?.series || []);
 const recentScans = computed(() => data.value?.recentScans || []);
 
 const qrTitle = computed(() => data.value?.qr?.title || "QR Stats");
-const qrSubtitle = computed(() => {
-  const qr = data.value?.qr;
-  if (!qr) return "";
-  const short = qr.shortUrl?.shortCode ? `/s/${qr.shortUrl.shortCode}` : null;
-  return short ? `${short} → ${qr.data}` : qr.data;
+const qrDestination = computed(() => data.value?.qr?.data || "");
+const publicShortLink = computed(() => {
+  const shortCode = data.value?.qr?.shortUrl?.shortCode;
+  if (!shortCode || !appOrigin.value) return "";
+  return `${appOrigin.value}/s/${shortCode}`;
+});
+
+const copiedShortLink = ref(false);
+const copyMessage = ref("");
+const copyMessageType = ref("success");
+let copyMessageTimeout = null;
+
+const copyPublicShortLink = async () => {
+  if (!process.client || !publicShortLink.value || !navigator?.clipboard?.writeText) {
+    copiedShortLink.value = false;
+    copyMessage.value = "Copy is unavailable in this browser";
+    copyMessageType.value = "error";
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(publicShortLink.value);
+    copiedShortLink.value = true;
+    copyMessage.value = "Short link copied";
+    copyMessageType.value = "success";
+
+    if (copyMessageTimeout) clearTimeout(copyMessageTimeout);
+    copyMessageTimeout = window.setTimeout(() => {
+      copiedShortLink.value = false;
+      copyMessage.value = "";
+    }, 2000);
+  } catch (err) {
+    console.error("Copy short link error:", err);
+    copiedShortLink.value = false;
+    copyMessage.value = "Failed to copy short link";
+    copyMessageType.value = "error";
+  }
+};
+
+onMounted(() => {
+  appOrigin.value = window.location.origin;
 });
 
 const formatTs = (ts) => {
@@ -314,5 +381,6 @@ watchEffect(() => {
 
 onBeforeUnmount(() => {
   destroyChart();
+  if (copyMessageTimeout) clearTimeout(copyMessageTimeout);
 });
 </script>

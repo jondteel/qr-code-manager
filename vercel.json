@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/keep-db-alive",
+      "schedule": "0 12 * * *"
+    }
+  ]
+}

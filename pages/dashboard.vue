@@ -159,6 +159,30 @@
               </div>
             </div>
 
+            <div
+              v-if="getShortLink(qr)"
+              class="mb-4 rounded-lg border border-indigo-100 bg-indigo-50 p-3"
+            >
+              <p class="text-xs font-medium uppercase text-indigo-700 mb-1">Short link</p>
+              <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                <a
+                  :href="getShortLink(qr)"
+                  class="min-w-0 flex-1 truncate text-sm font-medium text-indigo-900 hover:text-indigo-700"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {{ getShortLink(qr) }}
+                </a>
+                <button
+                  @click="copyShortLink(qr)"
+                  class="shrink-0 rounded-md border border-indigo-200 bg-white px-3 py-1.5 text-sm font-medium text-indigo-700 hover:bg-indigo-100 transition"
+                  type="button"
+                >
+                  {{ copiedShortLinkId === qr.id ? "Copied" : "Copy" }}
+                </button>
+              </div>
+            </div>
+
             <div class="bg-gray-50 rounded-lg p-4 mb-4 flex items-center justify-center">
               <ClientOnly>
                 <canvas :ref="(el) => setCanvasRef(qr.id, el)" class="bg-white rounded"></canvas>
@@ -246,6 +270,7 @@ const toSafeFilename = (raw) => {
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
 const router = useRouter();
+const appOrigin = ref("");
 
 // Fetch QR codes data
 const { data: qrData, pending, error, refresh } = await useFetch("/api/qr/list");
@@ -315,6 +340,7 @@ const renderAllQrs = async () => {
 };
 
 onMounted(async () => {
+  appOrigin.value = window.location.origin;
   await renderAllQrs();
 });
 
@@ -379,6 +405,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   document.removeEventListener("click", onDocClick);
+  if (copiedShortLinkTimeout) clearTimeout(copiedShortLinkTimeout);
 });
 
 // Modal state
@@ -394,6 +421,38 @@ const toast = ref({
 
 const showToast = (message, type = "info") => {
   toast.value = { show: true, message, type };
+};
+
+const copiedShortLinkId = ref(null);
+let copiedShortLinkTimeout = null;
+
+const getShortLink = (qr) => {
+  const shortCode = qr?.shortUrl?.shortCode;
+  if (!shortCode || !appOrigin.value) return "";
+  return `${appOrigin.value}/s/${shortCode}`;
+};
+
+const copyShortLink = async (qr) => {
+  const shortLink = getShortLink(qr);
+
+  if (!process.client || !shortLink || !navigator?.clipboard?.writeText) {
+    showToast("Copy is unavailable in this browser", "error");
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(shortLink);
+    copiedShortLinkId.value = qr.id;
+    showToast("Short link copied", "success");
+
+    if (copiedShortLinkTimeout) clearTimeout(copiedShortLinkTimeout);
+    copiedShortLinkTimeout = window.setTimeout(() => {
+      copiedShortLinkId.value = null;
+    }, 2000);
+  } catch (err) {
+    console.error("Copy short link error:", err);
+    showToast("Failed to copy short link", "error");
+  }
 };
 
 const confirmDelete = (qr) => {
