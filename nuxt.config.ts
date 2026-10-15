@@ -10,7 +10,6 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     databaseUrl: process.env.DATABASE_URL,
-    cronSecret: process.env.CRON_SECRET,
   },
 
   // ✅ Fix TS DOM globals (window, document, File, etc.)
