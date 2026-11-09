@@ -100,6 +100,13 @@
         </NuxtLink>
       </div>
 
+      <div class="mb-6 flex flex-wrap items-center gap-3">
+        <label for="qr-lifecycle" class="text-sm font-medium">Show QR codes</label>
+        <select ref="lifecycleSelect" id="qr-lifecycle" v-model="lifecycleFilter" class="rounded-lg border border-gray-300 bg-white px-3 py-2">
+          <option value="active">Active</option><option value="archived">Archived</option><option value="retired">Retired</option>
+        </select>
+      </div>
+      <p role="status" class="sr-only">{{ lifecycleMessage }}</p>
       <!-- Loading state -->
       <div v-if="pending" class="mb-6 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
@@ -126,7 +133,7 @@
               </div>
 
               <div class="relative shrink-0" data-menu-root>
-                <button @click.stop="toggleMenu(qr.id)" class="text-gray-400 hover:text-gray-600" type="button">
+                <button aria-label="QR actions" @click.stop="toggleMenu(qr.id)" class="text-gray-400 hover:text-gray-600" type="button">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       stroke-linecap="round"
@@ -148,17 +155,12 @@
                   >
                     Edit
                   </button>
-                  <button
-                    @click="confirmDelete(qr)"
-                    class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-b-lg"
-                    type="button"
-                  >
-                    Delete
-                  </button>
+
                 </div>
               </div>
             </div>
 
+            <QrLifecycleActions :qr="qr" :disabled="pending || !!error" @busy="value => setLifecycleBusy(qr.id, value)" @changed="applyLifecycle" @reload="refresh" />
             <div
               v-if="getShortLink(qr)"
               class="mb-4 rounded-lg border border-indigo-100 bg-indigo-50 p-3"
@@ -183,9 +185,13 @@
               </div>
             </div>
 
+            <div v-if="savedQrNotice(qr)" class="text-sm text-gray-600 mb-4" role="status">
+              <p v-if="qr?.payloadState === 'canonical-regeneration' && savedQrTarget(qr)" class="font-semibold">Canonical QR regeneration</p>
+              <p>{{ savedQrNotice(qr) }}</p>
+            </div>
             <div class="bg-gray-50 rounded-lg p-4 mb-4 flex items-center justify-center">
               <ClientOnly>
-                <canvas :ref="(el) => setCanvasRef(qr.id, el)" class="bg-white rounded"></canvas>
+                <canvas v-show="savedQrTarget(qr) && renderedKeys[qr.id] === qrKey(qr) && !pending && !error" :ref="(el) => setCanvasRef(qr.id, el)" class="bg-white rounded"></canvas>
               </ClientOnly>
             </div>
 
@@ -197,6 +203,7 @@
             <div class="flex gap-2">
               <button
                 @click="downloadQR(qr)"
+                :disabled="pending || !!error || lifecycleBusyIds.has(qr.id) || !savedQrTarget(qr)"
                 class="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition text-sm font-medium"
                 type="button"
               >
@@ -224,8 +231,8 @@
             d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
           />
         </svg>
-        <h3 class="mt-2 text-sm font-semibold text-gray-900">No QR codes yet</h3>
-        <p class="mt-1 text-sm text-gray-500">Get started by creating your first QR code.</p>
+        <h3 class="mt-2 text-sm font-semibold text-gray-900">No {{ lifecycleFilter }} QR codes</h3>
+        <p class="mt-1 text-sm text-gray-500">Choose another lifecycle view or create a new QR code.</p>
         <div class="mt-6">
           <NuxtLink
             to="/generate"
@@ -237,18 +244,6 @@
       </div>
     </main>
 
-    <!-- Confirm Delete Modal -->
-    <ConfirmModal
-      :show="showDeleteModal"
-      title="Delete QR Code"
-      :message="`Are you sure you want to delete '${qrToDelete?.title}'? This action cannot be undone.`"
-      confirmText="Delete"
-      cancelText="Cancel"
-      type="danger"
-      @confirm="handleDeleteConfirm"
-      @cancel="showDeleteModal = false"
-    />
-
     <!-- Toast Notifications -->
     <Toast :show="toast.show" :message="toast.message" :type="toast.type" @close="toast.show = false" />
   </div>
@@ -256,6 +251,9 @@
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { savedQrTarget, savedQrNotice } from "~/utils/qr-payload.mjs";
+import { renderQrCanvas } from "~/utils/qr-render.mjs";
+import { canvasToPngBlob } from "~/server/utils/qrToBlob.ts";
 import { downloadPngBlob } from "/server/utils/downloadQrPng";
 
 // If you prefer: keep this helper near the download handler.
@@ -270,10 +268,21 @@ const toSafeFilename = (raw) => {
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
 const router = useRouter();
-const appOrigin = ref("");
 
 // Fetch QR codes data
-const { data: qrData, pending, error, refresh } = await useFetch("/api/qr/list");
+const lifecycleMessage = ref('');
+const lifecycleSelect = ref(null);
+const lifecycleFilter = ref('active');
+const lifecycleBusyIds = ref(new Set());
+const { data: qrData, pending, error, refresh } = await useFetch("/api/qr/list", { query: { status: lifecycleFilter } });
+const setLifecycleBusy = (id, busy) => { if (busy) lifecycleBusyIds.value.add(id); else lifecycleBusyIds.value.delete(id); };
+const applyLifecycle = async qr => {
+  if (!qrData.value) return;
+  lifecycleMessage.value = `QR is now ${qr.lifecycleStatus}.`;
+  const removed = qr.lifecycleStatus !== lifecycleFilter.value;
+  qrData.value = { ...qrData.value, qrCodes: qrData.value.qrCodes.map(old => old.id === qr.id ? { ...old, ...qr } : old).filter(row => row.lifecycleStatus === lifecycleFilter.value) };
+  if (removed) { await nextTick(); lifecycleSelect.value?.focus(); }
+};
 
 const stats = computed(
   () =>
@@ -285,15 +294,17 @@ const stats = computed(
     }
 );
 
-const qrCodes = computed(() => qrData.value?.qrCodes || []);
+const qrCodes = computed(() => (qrData.value?.qrCodes || []).filter(qr => (qr.lifecycleStatus ?? 'active') === lifecycleFilter.value));
 
-const signOut = async () => {
-  await supabase.auth.signOut();
-  router.push("/login");
-};
+const { signOut } = useAccountLogout();
 
 // Import QRCode library
 let QRCodeLib = null;
+let active = true;
+const downloadingIds = ref(new Set());
+const renderedKeys = ref({});
+const qrKey = (qr) => JSON.stringify(qr);
+const exportKey = (id) => JSON.stringify([qrCodes.value.find(q => q.id === id), pending.value, !!error.value, lifecycleBusyIds.value.has(id)]);
 
 // map canvas elements by QR id
 const canvasMap = ref({}); // { [qrId]: HTMLCanvasElement }
@@ -325,28 +336,32 @@ const renderAllQrs = async () => {
     const canvas = canvasMap.value[qr.id];
     if (!canvas) continue;
 
-    const url = qr.shortUrl ? `${window.location.origin}/s/${qr.shortUrl.shortCode}` : qr.data;
+    const url = savedQrTarget(qr);
 
-    await QRCodeLib.toCanvas(canvas, url, {
-      width: 128,
-      margin: 1,
-      errorCorrectionLevel: qr.errorLevel,
-      color: {
-        dark: qr.fgColor,
-        light: qr.bgColor,
-      },
-    });
+    if (!url) continue;
+    const key = qrKey(qr);
+    try {
+      const buffer = document.createElement("canvas");
+      await renderQrCanvas(QRCodeLib, buffer, url, { ...qr, size: 128 });
+      if (!active || key !== qrKey(qrCodes.value.find(q => q.id === qr.id))) continue;
+      canvas.width = buffer.width;
+      canvas.height = buffer.height;
+      canvas.getContext("2d").drawImage(buffer, 0, 0);
+      renderedKeys.value[qr.id] = key;
+    } catch {
+      renderedKeys.value[qr.id] = null;
+      showToast("Could not render QR preview. Check its content, colors and size.", "error");
+    }
   }
 };
 
 onMounted(async () => {
-  appOrigin.value = window.location.origin;
   await renderAllQrs();
 });
 
 // Re-render any time the list changes
 watch(
-  () => qrCodes.value.map((q) => q.id).join(","),
+  () => JSON.stringify(qrCodes.value),
   async () => {
     const ids = new Set(qrCodes.value.map((q) => q.id));
     for (const key of Object.keys(canvasMap.value)) {
@@ -358,32 +373,25 @@ watch(
 
 // ✅ Download function (mobile-friendly)
 const downloadQR = async (qr) => {
-  await loadQrLib();
-
-  // Render to an offscreen canvas so we can create a Blob
-  const canvas = document.createElement("canvas");
-
-  const url = qr.shortUrl ? `${window.location.origin}/s/${qr.shortUrl.shortCode}` : qr.data;
-
-  await QRCodeLib.toCanvas(canvas, url, {
-    width: qr.size,
-    margin: 2,
-    errorCorrectionLevel: qr.errorLevel,
-    color: {
-      dark: qr.fgColor,
-      light: qr.bgColor,
-    },
-  });
-
-  const blob = await new Promise((resolve, reject) => {
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Failed to create PNG blob"))), "image/png");
-  });
-
-  await downloadPngBlob(blob, {
-    filename: toSafeFilename(qr.title),
-    preferShare: true,
-    openInNewTabFallback: true,
-  });
+  if (downloadingIds.value.has(qr.id)) return;
+  const current = qrCodes.value.find(q => q.id === qr.id);
+  const target = savedQrTarget(current);
+  if (!active || pending.value || error.value || lifecycleBusyIds.value.has(qr.id) || !target) { showToast("Reload a verified saved QR before downloading.", "error"); return; }
+  const key = exportKey(qr.id);
+  const settings = { ...current };
+  downloadingIds.value.add(qr.id);
+  try {
+    const QR = await loadQrLib();
+    const canvas = document.createElement("canvas");
+    await renderQrCanvas(QR, canvas, target, settings);
+    const blob = await canvasToPngBlob(canvas);
+    if (!active || key !== exportKey(qr.id)) throw new Error("QR changed");
+    await downloadPngBlob(blob, { filename: toSafeFilename(settings.title), preferShare: true, openInNewTabFallback: true, isCurrent: () => active && key === exportKey(qr.id) });
+  } catch {
+    showToast("Could not export PNG. Reload the QR and check its settings before retrying.", "error");
+  } finally {
+    downloadingIds.value.delete(qr.id);
+  }
 };
 
 // Menu state
@@ -404,13 +412,10 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  active = false;
   document.removeEventListener("click", onDocClick);
   if (copiedShortLinkTimeout) clearTimeout(copiedShortLinkTimeout);
 });
-
-// Modal state
-const showDeleteModal = ref(false);
-const qrToDelete = ref(null);
 
 // Toast state
 const toast = ref({
@@ -427,9 +432,8 @@ const copiedShortLinkId = ref(null);
 let copiedShortLinkTimeout = null;
 
 const getShortLink = (qr) => {
-  const shortCode = qr?.shortUrl?.shortCode;
-  if (!shortCode || !appOrigin.value) return "";
-  return `${appOrigin.value}/s/${shortCode}`;
+  const current = qrCodes.value.find(q => q.id === qr?.id);
+  return !pending.value && !error.value && !lifecycleBusyIds.value.has(qr?.id) && current?.shortUrl ? savedQrTarget(current) || "" : "";
 };
 
 const copyShortLink = async (qr) => {
@@ -452,27 +456,6 @@ const copyShortLink = async (qr) => {
   } catch (err) {
     console.error("Copy short link error:", err);
     showToast("Failed to copy short link", "error");
-  }
-};
-
-const confirmDelete = (qr) => {
-  qrToDelete.value = qr;
-  showDeleteModal.value = true;
-  openMenuId.value = null;
-};
-
-const handleDeleteConfirm = async () => {
-  showDeleteModal.value = false;
-
-  try {
-    await $fetch(`/api/qr/${qrToDelete.value.id}`, { method: "DELETE" });
-    await refresh();
-    showToast("QR code deleted successfully", "success");
-  } catch (err) {
-    console.error("Delete error:", err);
-    showToast("Failed to delete QR code", "error");
-  } finally {
-    qrToDelete.value = null;
   }
 };
 

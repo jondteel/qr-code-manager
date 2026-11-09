@@ -1,7 +1,8 @@
 // server/api/analytics/qr/[id].get.ts
 import prisma from "~/server/utils/prisma";
-import { serverSupabaseUser } from "#supabase/server";
+import { requireEmailAccount } from "~/server/utils/require-email-account";
 import { createError, getQuery, getRouterParam } from "h3";
+import { presentQr, readQrSnapshot, serverQrStage } from '~/server/utils/qr-issuance.mjs'
 
 type PeriodValue = 7 | 30 | 90 | "all";
 
@@ -16,7 +17,7 @@ function parsePeriod(raw: unknown): PeriodValue {
 
 export default defineEventHandler(async (event) => {
   try {
-    const user = await serverSupabaseUser(event);
+    const user = await requireEmailAccount(event);
     if (!user?.sub) {
       throw createError({
         statusCode: 401,
@@ -45,20 +46,28 @@ export default defineEventHandler(async (event) => {
     }
 
     // Ensure the QR belongs to this user
-    const qr = await prisma.qRCode.findFirst({
+    const qr = await readQrSnapshot(prisma, (tx) => tx.qRCode.findFirst({
       where: { id, userId: user.sub },
       select: {
+        userId: true,
+        issuedEncodedTarget: true,
+        lifecycleStatus: true,
+        errorLevel: true,
+        shortUrlId: true,
         id: true,
         title: true,
         data: true,
         createdAt: true,
         shortUrl: {
           select: {
+            id: true,
+            originalUrl: true,
+            userId: true,
             shortCode: true,
           },
         },
       },
-    });
+    }));
 
     if (!qr) {
       throw createError({
@@ -66,6 +75,8 @@ export default defineEventHandler(async (event) => {
         statusMessage: "QR code not found",
       });
     }
+
+    const presented = presentQr(qr, user.sub, useRuntimeConfig(event), process.env.VERCEL_ENV, serverQrStage(process.env));
 
     // Pull scans for this QR (within period)
     const scans = await prisma.analytics.findMany({
@@ -138,11 +149,17 @@ export default defineEventHandler(async (event) => {
     return {
       success: true,
       qr: {
+        lifecycleStatus: presented.lifecycleStatus,
+        mode: presented.mode,
+        encodedTarget: presented.encodedTarget,
+        payloadStatus: presented.payloadStatus,
+        payloadProvenance: presented.payloadProvenance,
+        payloadState: presented.payloadState,
         id: qr.id,
         title: qr.title,
         data: qr.data,
         createdAt: qr.createdAt,
-        shortUrl: qr.shortUrl ? { shortCode: qr.shortUrl.shortCode } : null,
+        shortUrl: presented.shortUrl ? { shortCode: presented.shortUrl.shortCode } : null,
       },
       stats: {
         totalScans,
@@ -156,7 +173,7 @@ export default defineEventHandler(async (event) => {
     // Preserve H3/Nuxt errors with status codes
     if (error?.statusCode) throw error;
 
-    console.error("QR analytics error:", error);
+    console.error({ event: 'qr-analytics', outcome: 'failed', reason: 'unexpected-error' });
 
     throw createError({
       statusCode: 500,

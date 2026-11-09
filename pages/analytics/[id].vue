@@ -14,7 +14,12 @@
         <div v-if="pending" class="text-gray-600">Loading…</div>
         <div v-else>
           <h1 class="text-2xl font-bold text-gray-900">{{ qrTitle }}</h1>
+          <p class="text-sm font-semibold capitalize">{{ data?.qr?.lifecycleStatus }}</p>
           <p class="text-gray-600 mt-1 truncate">{{ qrDestination }}</p>
+          <div v-if="savedQrNotice(data?.qr)" class="text-sm text-gray-600 mb-4" role="status">
+              <p v-if="data?.qr?.payloadState === 'canonical-regeneration' && savedQrTarget(data?.qr)" class="font-semibold">Canonical QR regeneration</p>
+              <p>{{ savedQrNotice(data?.qr) }}</p>
+            </div>
           <div
             v-if="publicShortLink"
             class="mt-3 rounded-lg border border-indigo-100 bg-indigo-50 p-3"
@@ -161,13 +166,13 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch, watchEffect } from "vue";
+import { savedQrTarget, savedQrNotice } from "~/utils/qr-payload.mjs";
+import { computed, onBeforeUnmount, ref, watch, watchEffect } from "vue";
 
 const supabase = useSupabaseClient();
 const user = useSupabaseUser();
 const router = useRouter();
 const route = useRoute();
-const appOrigin = ref("");
 
 const mobileMenuOpen = ref(false);
 
@@ -220,9 +225,7 @@ const recentScans = computed(() => data.value?.recentScans || []);
 const qrTitle = computed(() => data.value?.qr?.title || "QR Stats");
 const qrDestination = computed(() => data.value?.qr?.data || "");
 const publicShortLink = computed(() => {
-  const shortCode = data.value?.qr?.shortUrl?.shortCode;
-  if (!shortCode || !appOrigin.value) return "";
-  return `${appOrigin.value}/s/${shortCode}`;
+  return !pending.value && !error.value && data.value?.qr?.shortUrl ? savedQrTarget(data.value.qr) || "" : "";
 });
 
 const copiedShortLink = ref(false);
@@ -256,10 +259,6 @@ const copyPublicShortLink = async () => {
     copyMessageType.value = "error";
   }
 };
-
-onMounted(() => {
-  appOrigin.value = window.location.origin;
-});
 
 const formatTs = (ts) => {
   const d = new Date(ts);

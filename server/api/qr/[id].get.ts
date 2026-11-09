@@ -1,10 +1,11 @@
 import prisma from '~/server/utils/prisma'
-import { serverSupabaseUser } from '#supabase/server'
+import { requireEmailAccount } from '~/server/utils/require-email-account'
 import { createError, getRouterParam } from 'h3'
+import { presentQr, readQrSnapshot, serverQrStage } from '~/server/utils/qr-issuance.mjs'
 
 export default defineEventHandler(async (event) => {
   try {
-    const user = await serverSupabaseUser(event)
+    const user = await requireEmailAccount(event)
     if (!user?.sub) {
       throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
     }
@@ -15,12 +16,16 @@ export default defineEventHandler(async (event) => {
     }
 
     // Fetch only the user's QR code (prevents loading someone else's data)
-    const qrCode = await prisma.qRCode.findFirst({
+    const qrCode = await readQrSnapshot(prisma, (tx) => tx.qRCode.findFirst({
       where: {
         id,
         userId: user.sub,
       },
       select: {
+        userId: true,
+        issuedEncodedTarget: true,
+        lifecycleStatus: true,
+        shortUrlId: true,
         id: true,
         title: true,
         description: true,
@@ -34,6 +39,7 @@ export default defineEventHandler(async (event) => {
         updatedAt: true,
         shortUrl: {
           select: {
+            userId: true,
             id: true,
             shortCode: true,
             originalUrl: true,
@@ -57,7 +63,7 @@ export default defineEventHandler(async (event) => {
           },
         },
       },
-    })
+    }))
 
     if (!qrCode) {
       // Covers both "not found" and "not yours" without leaking which
@@ -66,12 +72,12 @@ export default defineEventHandler(async (event) => {
 
     return {
       success: true,
-      qrCode,
+      qrCode: presentQr(qrCode, user.sub, useRuntimeConfig(event), process.env.VERCEL_ENV, serverQrStage(process.env)),
     }
   } catch (error: any) {
     if (error?.statusCode) throw error
 
-    console.error('Fetch QR code error:', error)
+    console.error({ event: 'qr-fetch', outcome: 'failed', reason: 'unexpected-error' })
 
     throw createError({
       statusCode: 500,

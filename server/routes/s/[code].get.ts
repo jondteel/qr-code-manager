@@ -1,11 +1,13 @@
 // server/routes/s/[code].get.ts
 import prisma from "~/server/utils/prisma";
+import { recordRedirectScan } from "~/server/utils/qr-scan.mjs";
+import { decodeRedirectCode, resolveRedirect } from "~/server/utils/qr-redirect.mjs";
 import {
   defineEventHandler,
   getRouterParam,
   getHeader,
   sendRedirect,
-  createError,
+  setResponseStatus,
   type H3Event,
 } from "h3";
 
@@ -31,48 +33,36 @@ function getClientIp(event: H3Event): string {
   return event.node?.req?.socket?.remoteAddress ?? "unknown";
 }
 
+// Return generic failures directly: Nitro's default 404 renderer overwrites
+// Cache-Control with no-cache. Normal H3 serialization preserves no-store.
+function unavailable(event: H3Event, statusCode: 404 | 503) {
+  setResponseStatus(event, statusCode, "Link unavailable");
+  return { statusCode, statusMessage: "Link unavailable" };
+}
+
 export default defineEventHandler(async (event) => {
-  const code = getRouterParam(event, "code");
+  const raw = getRouterParam(event, "code");
+  const code = decodeRedirectCode(raw);
+  if (!code) return unavailable(event, 404);
 
-  if (!code) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: "Missing code",
-    });
+  let decision;
+  try {
+    decision = await resolveRedirect(prisma, code);
+  } catch {
+    return unavailable(event, 503);
   }
-
-  const shortUrl = await prisma.shortUrl.findUnique({
-    where: { shortCode: code },
-    select: {
-      id: true,
-      originalUrl: true,
-      qrCode: { select: { id: true } },
-    },
-  });
-
-  if (!shortUrl) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: "Short URL not found",
-    });
-  }
+  if (!decision.available) return unavailable(event, 404);
 
   const userAgent = firstHeaderValue(event, "user-agent") ?? null;
   const ipAddress = getClientIp(event);
 
-  // Don't block redirect if analytics logging fails
-  try {
-    await prisma.analytics.create({
-      data: {
-        shortUrlId: shortUrl.id,
-        qrCodeId: shortUrl.qrCode?.id ?? null,
-        userAgent,
-        ipAddress,
-      },
-    });
-  } catch (err) {
-    console.error("Redirect analytics logging failed:", err);
-  }
+  const scan = await recordRedirectScan(prisma, {
+    shortUrlId: decision.shortUrlId,
+    qrCodeId: decision.qrCodeId,
+    userAgent,
+    ipAddress,
+  });
 
-  return sendRedirect(event, shortUrl.originalUrl, 302);
+  if (scan.reason === "lifecycle-unavailable") return unavailable(event, 404);
+  return sendRedirect(event, decision.destination, 302);
 });

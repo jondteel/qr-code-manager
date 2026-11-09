@@ -1,4 +1,5 @@
 <template>
+  <p v-if="logoutError" role="alert" class="p-3 text-red-700 bg-red-50">{{ logoutError }}</p>
   <nav class="bg-white shadow-sm border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-16 gap-3">
@@ -56,7 +57,7 @@
               {{ user?.email || "Guest" }}
             </span>
             <button
-              @click="signOut"
+              @click="signOut" :disabled="logoutBusy"
               class="text-gray-600 hover:text-gray-900 text-sm font-medium"
               type="button"
             >
@@ -143,7 +144,7 @@
 
               <div class="border-t border-gray-100 p-2">
                 <button
-                  @click="handleMobileSignOut"
+                  @click="handleMobileSignOut" :disabled="logoutBusy"
                   class="w-full text-left px-3 py-2 rounded-md text-sm text-red-600 hover:bg-red-50"
                   type="button"
                 >
@@ -180,10 +181,7 @@ const route = useRoute();
 
 const mobileMenuOpen = ref(false);
 
-const signOut = async () => {
-  await supabase.auth.signOut();
-  router.push("/login");
-};
+const { signOut, logoutError, logoutBusy } = useAccountLogout();
 
 const handleMobileSignOut = async () => {
   mobileMenuOpen.value = false;

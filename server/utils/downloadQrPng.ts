@@ -1,6 +1,7 @@
 /// <reference lib="dom" />
 
 type DownloadOptions = {
+  isCurrent?: () => boolean;
   filename: string; // e.g. "my_qr.png"
 
   /**
@@ -48,13 +49,14 @@ function shouldUseShareSheet(): boolean {
 
 export async function downloadPngBlob(
   blob: Blob,
-  { filename, preferShare = true, openInNewTabFallback = true }: DownloadOptions
+  { filename, preferShare = true, openInNewTabFallback = true, isCurrent = () => true }: DownloadOptions
 ) {
-  if (!import.meta.client) return;
+  if (!import.meta.client) throw new Error("PNG download is unavailable.");
+  if (!isCurrent()) throw new Error("QR changed before download.");
 
   const w = getWindow();
   const d = getDocument();
-  if (!w || !d) return;
+  if (!w || !d) throw new Error("PNG download is unavailable.");
 
   const file = new File([blob], filename, { type: "image/png" });
 
@@ -80,6 +82,7 @@ export async function downloadPngBlob(
   }
 
   // ✅ Standard download (desktop + many Android browsers)
+  if (!isCurrent()) throw new Error("QR changed before download.");
   const url = URL.createObjectURL(blob);
 
   try {
