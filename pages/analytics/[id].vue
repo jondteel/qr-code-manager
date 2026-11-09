@@ -113,7 +113,7 @@
           </button>
         </div>
 
-        <p class="text-sm text-gray-600 mb-3">Chart dates use UTC; totals and chart windows may differ while reporting is being corrected.</p>
+        <p class="text-sm text-gray-600 mb-3">Chart dates use UTC. {{ selectedPeriod === "all" ? "All-time totals include all associated events; the chart shows the latest 365 UTC calendar days." : "The chart covers the same period as the total." }} The current day is partial.</p>
         <ClientOnly>
           <div class="relative">
             <canvas ref="chartEl" class="w-full" style="height: 260px"></canvas>
@@ -220,8 +220,8 @@ const stats = computed(
   () =>
     data.value?.stats || {
       totalScans: 0,
-      uniqueVisitors: 0,
-      avgScansPerDay: 0,
+      uniqueVisitors: null,
+      avgScansPerDay: null,
     }
 );
 

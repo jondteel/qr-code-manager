@@ -1,3 +1,4 @@
+import * as analyticsWindow from '../server/utils/analytics-window.mjs'
 import * as edit from '../server/utils/qr-edit.mjs'
 import * as zod from 'zod'
 import assert from 'node:assert/strict'
@@ -139,7 +140,7 @@ async function readHarness(path, rows, { user = { sub: 'owner' }, runtimeConfig 
   const imports = {
     '~/server/utils/prisma': mod({ default: prisma }), '~/server/utils/require-email-account': mod({ requireEmailAccount: async () => { if (!user?.sub) throw h3.createError({ statusCode: 401 }); return user } }),
     h3: mod({ ...h3, getRouterParam: () => 'qr', getQuery: () => ({ period: 7 }) }),
-    '~/server/utils/qr-issuance.mjs': mod(issuance),
+    '~/server/utils/qr-issuance.mjs': mod(issuance), '~/server/utils/analytics-window.mjs': mod(analyticsWindow),
   }
   const source = await readFile(new URL('../' + path, import.meta.url), 'utf8')
   const route = new SourceTextModule(stripTypeScriptTypes(source), { context })
@@ -180,7 +181,7 @@ test('strict update API refuses provenance replacement without any database oper
     h3: mod({ ...h3, getQuery: () => ({}), getRouterParam: () => 'qr', readBody: async () => ({ issuedEncodedTarget: 'https://evil.example.invalid' }) }),
     zod: mod(zod),
     '~/server/utils/qr-edit.mjs': mod(edit),
-    '~/server/utils/qr-issuance.mjs': mod(issuance),
+    '~/server/utils/qr-issuance.mjs': mod(issuance), '~/server/utils/analytics-window.mjs': mod(analyticsWindow),
   }
   const source = await readFile(new URL('../server/api/qr/[id].put.ts', import.meta.url), 'utf8')
   const route = new SourceTextModule(stripTypeScriptTypes(source), { context })

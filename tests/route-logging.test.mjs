@@ -12,6 +12,7 @@ import * as zod from 'zod'
 import { Prisma } from '@prisma/client'
 import * as destination from '../server/utils/qr-destination.mjs'
 import * as issuance from '../server/utils/qr-issuance.mjs'
+import * as analyticsWindow from '../server/utils/analytics-window.mjs'
 
 const routes = [
   ['qr/create.post.ts', 'qr-create', 'Failed to create QR code'],
@@ -108,6 +109,7 @@ async function harness(route, { error, failAt = 'query', denial, foreign = false
     } }),
     h3: mod(h3), zod: mod(zod), nanoid: mod({ nanoid: () => 'fixture8' }),
     '@prisma/client': mod({ Prisma }),
+    '~/server/utils/analytics-window.mjs': mod(analyticsWindow),
     '~/server/utils/qr-destination.mjs': mod(destination), '~/server/utils/qr-issuance.mjs': mod(issuance),
   }
   // Optional second pass executes the fresh Nitro-generated handler chunks.

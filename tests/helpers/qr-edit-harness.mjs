@@ -1,3 +1,4 @@
+import * as analyticsWindow from '../../server/utils/analytics-window.mjs'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { stripTypeScriptTypes } from 'node:module'
@@ -28,7 +29,7 @@ export async function handlerHarness(prisma, { path = 'server/api/qr/[id].put.ts
     '~/server/utils/prisma': mod({ default: prisma }), '~/server/utils/require-email-account': mod({ requireEmailAccount: async () => { if (!user?.sub) throw h3.createError({ statusCode: 401 }); return user } }),
     h3: mod({ ...h3, getRouterParam: () => id, readBody: async () => body, getQuery: () => ({ period: 'all' }),
       getHeader: () => undefined, sendRedirect: (_event, target, status) => ({ target, status }) }),
-    '~/server/utils/qr-lifecycle.mjs': mod(lifecycle), zod: mod(zod), '~/server/utils/qr-edit.mjs': mod(edit), '~/server/utils/qr-issuance.mjs': mod(issuance),
+    '~/server/utils/qr-lifecycle.mjs': mod(lifecycle), zod: mod(zod), '~/server/utils/qr-edit.mjs': mod(edit), '~/server/utils/qr-issuance.mjs': mod(issuance), '~/server/utils/analytics-window.mjs': mod(analyticsWindow),
   }
   const source = await readFile(new URL('../../' + path, import.meta.url), 'utf8')
   const route = new SourceTextModule(stripTypeScriptTypes(source), { context })

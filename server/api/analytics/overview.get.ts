@@ -2,17 +2,7 @@
 import prisma from "~/server/utils/prisma";
 import { requireEmailAccount } from "~/server/utils/require-email-account";
 import { createError, getQuery } from "h3";
-
-type PeriodValue = 7 | 30 | 90 | "all";
-
-function parsePeriod(raw: unknown): PeriodValue {
-  if (raw === "all") return "all";
-
-  const n = Number(raw ?? 30);
-  if (n === 7 || n === 30 || n === 90) return n;
-
-  return 30;
-}
+import { analyticsWindow, parseAnalyticsPeriod, averagePerDay, growth, chartWindow, dailySeries } from "~/server/utils/analytics-window.mjs";
 
 export default defineEventHandler(async (event) => {
   try {
@@ -27,16 +17,12 @@ export default defineEventHandler(async (event) => {
 
     // Query params
     const query = getQuery(event);
-    const period = parsePeriod(query.period);
-
-    // Date range
-    let startDate: Date;
-    if (period === "all") {
-      startDate = new Date(0);
-    } else {
-      startDate = new Date();
-      startDate.setDate(startDate.getDate() - period);
-    }
+    let period: 7 | 30 | 90 | "all";
+    try { period = parseAnalyticsPeriod(query.period); }
+    catch { throw createError({ statusCode: 400, statusMessage: "Invalid analytics period" }); }
+    const window = analyticsWindow(period, new Date());
+    const timestamp = { ...(window.previous ? { gte: window.previous.start } : {}), lt: window.end };
+    const chart = chartWindow(window);
 
     // Get user's QR codes + analytics within period
     const qrCodes = await prisma.qRCode.findMany({
@@ -48,7 +34,7 @@ export default defineEventHandler(async (event) => {
         data: true,
         analytics: {
           where: {
-            timestamp: { gte: startDate },
+            timestamp,
           },
           select: {
             timestamp: true,
@@ -57,50 +43,22 @@ export default defineEventHandler(async (event) => {
       },
     });
 
-    // Total scans
-    const totalScans = qrCodes.reduce((sum, qr) => sum + qr.analytics.length, 0);
-
-    // These measurements are unavailable until coverage and comparison rules are established.
+    // Coverage authority is not available; event timestamps do not establish it.
+    const current = (t: Date) => (!window.start || t >= window.start) && t < window.end;
+    const previous = (t: Date) => !!window.previous && t >= window.previous.start && t < window.previous.end;
+    const currentQrs = qrCodes.map((qr) => ({ ...qr, analytics: qr.analytics.filter((scan) => current(new Date(scan.timestamp))) }));
+    const currentScans = currentQrs.flatMap((qr) => qr.analytics);
+    const totalScans = currentScans.length;
+    const previousScans = window.previous ? qrCodes.reduce((sum, qr) => sum + qr.analytics.filter((scan) => previous(new Date(scan.timestamp))).length, 0) : null;
     const uniqueVisitors = null;
-    const scanGrowth = null;
-    const avgScansPerDay = null;
-    const activeQRCodes = qrCodes.filter((qr) => qr.analytics.length > 0).length;
-
-    // Scans over time (bucketed by UTC date)
-    const buckets = new Map<string, number>(); // YYYY-MM-DD -> count
-
-    for (const qr of qrCodes) {
-      for (const scan of qr.analytics) {
-        const key = new Date(scan.timestamp).toISOString().slice(0, 10);
-        buckets.set(key, (buckets.get(key) ?? 0) + 1);
-      }
-    }
-
-    let series: Array<{ date: string; scans: number }> = [];
-
-    if (period === "all") {
-      // Sort and cap to last 365 points for payload safety
-      const keys = Array.from(buckets.keys()).sort();
-      const capped = keys.slice(Math.max(0, keys.length - 365));
-      series = capped.map((k) => ({ date: k, scans: buckets.get(k) ?? 0 }));
-    } else {
-      // Fill missing days so chart remains continuous
-      const end = new Date();
-      const start = new Date();
-      start.setDate(end.getDate() - (period - 1));
-
-      for (
-        let cursor = new Date(start);
-        cursor <= end;
-        cursor.setDate(cursor.getDate() + 1)
-      ) {
-        const key = cursor.toISOString().slice(0, 10);
-        series.push({ date: key, scans: buckets.get(key) ?? 0 });
-      }
-    }
+    const avgScansPerDay = averagePerDay(totalScans, null);
+    const comparison = growth(totalScans, previousScans, false);
+    const scanGrowth = comparison.value;
+    const activeQRCodes = currentQrs.filter((qr) => qr.analytics.length > 0).length;
+    const series = dailySeries(currentScans, chart);
 
     // Top performing QR codes by scan count in selected period
-    const topQRCodes = qrCodes
+    const topQRCodes = currentQrs
       .map((qr) => ({
         id: qr.id,
         title: qr.title,
@@ -121,6 +79,7 @@ export default defineEventHandler(async (event) => {
         scanGrowth,
       },
       series,
+      range: { ...window, chart, previousScans, growthStatus: comparison.status, coverage: "unknown" },
       topQRCodes,
     };
   } catch (error: any) {

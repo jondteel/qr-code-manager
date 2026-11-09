@@ -2,18 +2,8 @@
 import prisma from "~/server/utils/prisma";
 import { requireEmailAccount } from "~/server/utils/require-email-account";
 import { createError, getQuery, getRouterParam } from "h3";
+import { analyticsWindow, parseAnalyticsPeriod, averagePerDay, growth, chartWindow, dailySeries } from "~/server/utils/analytics-window.mjs";
 import { presentQr, readQrSnapshot, serverQrStage } from '~/server/utils/qr-issuance.mjs'
-
-type PeriodValue = 7 | 30 | 90 | "all";
-
-function parsePeriod(raw: unknown): PeriodValue {
-  if (raw === "all") return "all";
-
-  const n = Number(raw ?? 30);
-  if (n === 7 || n === 30 || n === 90) return n;
-
-  return 30; // safe default
-}
 
 export default defineEventHandler(async (event) => {
   try {
@@ -34,16 +24,12 @@ export default defineEventHandler(async (event) => {
     }
 
     const query = getQuery(event);
-    const period = parsePeriod(query.period);
-
-    // Date range
-    let startDate: Date;
-    if (period === "all") {
-      startDate = new Date(0);
-    } else {
-      startDate = new Date();
-      startDate.setDate(startDate.getDate() - period);
-    }
+    let period: 7 | 30 | 90 | "all";
+    try { period = parseAnalyticsPeriod(query.period); }
+    catch { throw createError({ statusCode: 400, statusMessage: "Invalid analytics period" }); }
+    const window = analyticsWindow(period, new Date());
+    const timestamp = { ...(window.previous ? { gte: window.previous.start } : {}), lt: window.end };
+    const chart = chartWindow(window);
 
     // Ensure the QR belongs to this user
     const qr = await readQrSnapshot(prisma, (tx) => tx.qRCode.findFirst({
@@ -82,7 +68,7 @@ export default defineEventHandler(async (event) => {
     const scans = await prisma.analytics.findMany({
       where: {
         qrCodeId: qr.id,
-        timestamp: { gte: startDate },
+        timestamp,
       },
       orderBy: { timestamp: "desc" },
       select: {
@@ -93,42 +79,16 @@ export default defineEventHandler(async (event) => {
       },
     });
 
-    const totalScans = scans.length;
-
-    // Unique people and a reliable daily average are not currently measurable.
+    const currentScans = scans.filter((scan) => (!window.start || new Date(scan.timestamp) >= window.start) && new Date(scan.timestamp) < window.end);
+    const previousScans = window.previous ? scans.filter((scan) => new Date(scan.timestamp) >= window.previous!.start && new Date(scan.timestamp) < window.previous!.end).length : null;
+    const totalScans = currentScans.length;
     const uniqueVisitors = null;
-    const avgScansPerDay = null;
-
-    // Bucket by day (UTC day keys)
-    const buckets = new Map<string, number>(); // YYYY-MM-DD -> count
-    for (const s of scans) {
-      const key = new Date(s.timestamp).toISOString().slice(0, 10);
-      buckets.set(key, (buckets.get(key) ?? 0) + 1);
-    }
-
-    let series: Array<{ date: string; scans: number }> = [];
-
-    if (period === "all") {
-      const keys = Array.from(buckets.keys()).sort();
-      const capped = keys.slice(Math.max(0, keys.length - 365)); // cap payload
-      series = capped.map((k) => ({ date: k, scans: buckets.get(k) ?? 0 }));
-    } else {
-      const end = new Date();
-      const start = new Date();
-      start.setDate(end.getDate() - (period - 1));
-
-      for (
-        let cursor = new Date(start);
-        cursor <= end;
-        cursor.setDate(cursor.getDate() + 1)
-      ) {
-        const key = cursor.toISOString().slice(0, 10);
-        series.push({ date: key, scans: buckets.get(key) ?? 0 });
-      }
-    }
+    const avgScansPerDay = averagePerDay(totalScans, null);
+    const comparison = growth(totalScans, previousScans, false);
+    const series = dailySeries(currentScans, chart);
 
     // Latest scans table (cap payload)
-    const recentScans = scans.slice(0, 50);
+    const recentScans = currentScans.slice(0, 50);
 
     return {
       success: true,
@@ -151,6 +111,7 @@ export default defineEventHandler(async (event) => {
         avgScansPerDay,
       },
       series,
+      range: { ...window, chart, previousScans, growthStatus: comparison.status, coverage: "unknown" },
       recentScans,
     };
   } catch (error: any) {

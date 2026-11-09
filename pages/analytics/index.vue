@@ -62,7 +62,7 @@
           <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <p class="text-sm text-gray-600 mb-1">Average per day</p>
             <p class="text-3xl font-bold text-gray-900">Unavailable</p>
-            <p class="text-xs text-gray-500 mt-2">Coverage and date windows are being reviewed</p>
+            <p class="text-xs text-gray-500 mt-2">Tracking coverage is unknown</p>
           </div>
         </div>
 
@@ -79,7 +79,7 @@
             </button>
           </div>
 
-          <p class="text-sm text-gray-600 mb-3">Chart dates use UTC; totals and chart windows may differ while reporting is being corrected.</p>
+          <p class="text-sm text-gray-600 mb-3">Chart dates use UTC. {{ selectedPeriod === "all" ? "All-time totals include all associated events; the chart shows the latest 365 UTC calendar days." : "The chart covers the same period as the total." }} The current day is partial.</p>
           <ClientOnly>
             <div class="relative">
               <canvas ref="chartEl" class="w-full" style="height: 260px;"></canvas>
@@ -170,10 +170,10 @@ const { data: analyticsData, pending, error, refresh } = await useFetch(
 
 const stats = computed(() => analyticsData.value?.stats || {
   totalScans: 0,
-  uniqueVisitors: 0,
+  uniqueVisitors: null,
   activeQRCodes: 0,
-  avgScansPerDay: 0,
-  scanGrowth: 0,
+  avgScansPerDay: null,
+  scanGrowth: null,
 });
 
 const topQRCodes = computed(() => analyticsData.value?.topQRCodes || []);
