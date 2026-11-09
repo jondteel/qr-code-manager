@@ -195,7 +195,12 @@ for (const [route, event, message] of routes) {
       } else if (event === 'qr-list') {
         assert.equal(response.body.qrCodes.length, 1); assert.equal(response.body.stats.totalQRCodes, 1)
       } else if (event === 'qr-fetch') assert.equal(response.body.qrCode.id, 'fictional-qr')
-      else { assert.equal(response.body.stats.totalScans, 0); assert.ok(Array.isArray(response.body.series)) }
+      else {
+        assert.equal(response.body.stats.totalScans, 0); assert.ok(Array.isArray(response.body.series))
+        assert.equal(response.body.stats.uniqueVisitors, null)
+        assert.equal(response.body.stats.avgScansPerDay, null)
+        if (event === 'analytics-overview') assert.equal(response.body.stats.scanGrowth, null)
+      }
     } finally { await h.close() }
   })
   for (const denial of [401, 403, 503]) test(`${event}: admission ${denial} still refuses before database`, async () => {

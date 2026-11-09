@@ -95,25 +95,9 @@ export default defineEventHandler(async (event) => {
 
     const totalScans = scans.length;
 
-    // Unique visitors based on IP (skip unknowns)
-    const uniqueIPs = new Set<string>();
-    for (const s of scans) {
-      if (s.ipAddress && s.ipAddress !== "unknown") {
-        uniqueIPs.add(s.ipAddress);
-      }
-    }
-    const uniqueVisitors = uniqueIPs.size;
-
-    // Avg scans/day
-    const days =
-      period === "all"
-        ? Math.max(
-            1,
-            Math.ceil((Date.now() - startDate.getTime()) / (1000 * 60 * 60 * 24))
-          )
-        : period;
-
-    const avgScansPerDay = Math.round(totalScans / days);
+    // Unique people and a reliable daily average are not currently measurable.
+    const uniqueVisitors = null;
+    const avgScansPerDay = null;
 
     // Bucket by day (UTC day keys)
     const buckets = new Map<string, number>(); // YYYY-MM-DD -> count

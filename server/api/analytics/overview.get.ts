@@ -52,7 +52,6 @@ export default defineEventHandler(async (event) => {
           },
           select: {
             timestamp: true,
-            ipAddress: true,
           },
         },
       },
@@ -61,33 +60,11 @@ export default defineEventHandler(async (event) => {
     // Total scans
     const totalScans = qrCodes.reduce((sum, qr) => sum + qr.analytics.length, 0);
 
-    // Unique visitors (estimated via IP)
-    const uniqueIPs = new Set<string>();
-    for (const qr of qrCodes) {
-      for (const scan of qr.analytics) {
-        if (scan.ipAddress && scan.ipAddress !== "unknown") {
-          uniqueIPs.add(scan.ipAddress);
-        }
-      }
-    }
-    const uniqueVisitors = uniqueIPs.size;
-
-    // Active QR codes (scanned this period)
+    // These measurements are unavailable until coverage and comparison rules are established.
+    const uniqueVisitors = null;
+    const scanGrowth = null;
+    const avgScansPerDay = null;
     const activeQRCodes = qrCodes.filter((qr) => qr.analytics.length > 0).length;
-
-    // Average scans/day
-    const days =
-      period === "all"
-        ? Math.max(
-            1,
-            Math.ceil((Date.now() - startDate.getTime()) / (1000 * 60 * 60 * 24))
-          )
-        : period;
-
-    const avgScansPerDay = Math.round(totalScans / days);
-
-    // Placeholder growth (keep until you implement prev-period comparison)
-    const scanGrowth = 0;
 
     // Scans over time (bucketed by UTC date)
     const buckets = new Map<string, number>(); // YYYY-MM-DD -> count

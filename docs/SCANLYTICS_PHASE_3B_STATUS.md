@@ -1,0 +1,7 @@
+# Phase 3B: interim analytics accuracy work
+
+The analytics endpoints retain their existing response keys but return null for unique visitors and daily averages; overview growth is also null. Distinct IP strings do not establish unique people, the previous growth value was a placeholder, and the existing average and time windows are not reliable. Pages label recorded redirect events and disclose automated/repeated requests, unavailable metrics, direct-content tracking limitations, and current chart/window differences. This is an interim correction, not Phase 3B acceptance.
+
+The current event reads remain unbounded, historical coverage is unknown, and chart and total windows can differ. Decide reporting timezone, calendar and partial-period comparison rules, lifetime coverage authority, and historical attribution before implementing comparable averages and growth. SQL aggregation and pagination require ownership-safe query design and separate disposable database parity and query-plan validation; no migration or production operation is authorized by this change. Existing event data and ingestion are unchanged.
+
+Validation: 45 route-logging checks passed with synthetic fixtures and a network-denying guard (loopback limited to the test's ephemeral server); Prisma schema validation and npm run build passed with fictional database URLs and installed Prisma engines. The first build attempt was stopped by the guard during engine lookup; explicit local engine paths allowed the subsequent build. No database-backed or hosted testing was performed.
