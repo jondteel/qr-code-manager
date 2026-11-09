@@ -71,7 +71,7 @@ const routes = ['qr/list.get.ts', 'qr/create.post.ts', 'qr/[id].get.ts', 'qr/[id
 async function routeHarness(path, provider) {
   let touches = 0, providerCalls = 0
   const trip = () => { touches++; throw Error('synthetic-db-boundary') }
-  const db = { qRCode: { findMany: trip, findFirst: trip }, analytics: { findMany: trip }, $transaction: trip }
+  const db = { qRCode: { findMany: trip, findFirst: trip }, analytics: { findMany: trip }, $transaction: trip, $queryRaw: trip }
   const context = createContext({ defineEventHandler: h => h, useRuntimeConfig: () => ({}), process: { env: { NODE_ENV: 'test' } }, console: { error() {} } })
   const mod = exports => new SyntheticModule(Object.keys(exports), function () { for (const [k, v] of Object.entries(exports)) this.setExport(k, v) }, { context })
   const helper = new SourceTextModule(stripTypeScriptTypes(await readFile(new URL('server/utils/require-email-account.ts', root), 'utf8')), { context })

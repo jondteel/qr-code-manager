@@ -131,9 +131,12 @@ async function readHarness(path, rows, { user = { sub: 'owner' }, runtimeConfig 
   const prisma = {
     $transaction: async (read, options) => {
       calls.push(options); assert.deepEqual(options, { isolationLevel: 'RepeatableRead' })
-      return read({ qRCode: { findFirst: async query => pick(query)[0] || null, findMany: async query => pick(query) } })
+      return read({
+        qRCode: { findFirst: async query => pick(query)[0] || null, findMany: async query => pick(query) },
+        $queryRaw: async () => [{ totalScans: 0n, previousScans: 0n, buckets: [] }],
+        analytics: { findMany: async () => [] },
+      })
     },
-    analytics: { findMany: async () => [] },
   }
   const context = createContext({ defineEventHandler: h => h, useRuntimeConfig: () => runtimeConfig, process: { env: environment }, console: { error() {} } })
   function mod(exports) { return new SyntheticModule(Object.keys(exports), function () { for (const [k,v] of Object.entries(exports)) this.setExport(k,v) }, { context }) }

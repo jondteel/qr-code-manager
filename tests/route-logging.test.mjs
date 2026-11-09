@@ -66,6 +66,11 @@ async function harness(route, { error, failAt = 'query', denial, foreign = false
       findMany: async args => { checkpoint('query'); const r = owned(args); return r ? [r] : [] },
       findFirst: async args => { checkpoint('query'); return owned(args) },
     },
+    $queryRaw: async (strings, ...values) => {
+      assert.equal(values.at(-1), 'fictional-owner')
+      checkpoint(route.includes('/qr/') ? 'aggregate' : 'query')
+      return [{ totalScans: 0n, previousScans: 0n, activeQRCodes: 0n, buckets: [], topQRCodes: [] }]
+    },
     analytics: { findMany: async args => {
       assert.equal(args.where.qrCodeId, 'fictional-qr'); checkpoint('scans'); return []
     } },
@@ -231,7 +236,7 @@ for (const route of ['qr/[id].get.ts', 'analytics/qr/[id].get.ts']) test(`${rout
   const h = await harness(route, { foreign: true })
   try {
     const r = await h.invoke(); assert.equal(r.status, 404); assert.equal(r.body.statusMessage, 'QR code not found')
-    assert.equal(h.calls.includes('scans'), false); assert.deepEqual(h.logs, []); noCanaries(h, r)
+    assert.equal(h.calls.includes('scans'), false); assert.equal(h.calls.includes('aggregate'), false); assert.deepEqual(h.logs, []); noCanaries(h, r)
   } finally { await h.close() }
 })
 test('qr-create: direct success preserves exact content and creates no mapping', async () => {

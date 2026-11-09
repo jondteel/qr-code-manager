@@ -38,15 +38,8 @@ export function chartWindow(window) {
   return { start: window.start ?? new Date(today - 364 * DAY), end: window.end }
 }
 
-export function dailySeries(scans, window) {
-  const buckets = new Map()
-  for (const scan of scans) {
-    const time = new Date(scan.timestamp)
-    if (time >= window.start && time < window.end) {
-      const key = time.toISOString().slice(0, 10)
-      buckets.set(key, (buckets.get(key) ?? 0) + 1)
-    }
-  }
+export function dailySeries(counts, window) {
+  const buckets = new Map(counts.map(({ date, scans }) => [date, scans]))
   const series = []
   for (let cursor = new Date(window.start); cursor < window.end; cursor.setUTCDate(cursor.getUTCDate() + 1)) {
     const date = cursor.toISOString().slice(0, 10)

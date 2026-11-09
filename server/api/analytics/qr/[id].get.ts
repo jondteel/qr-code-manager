@@ -1,8 +1,9 @@
 // server/api/analytics/qr/[id].get.ts
+import type { Prisma } from "@prisma/client";
 import prisma from "~/server/utils/prisma";
 import { requireEmailAccount } from "~/server/utils/require-email-account";
 import { createError, getQuery, getRouterParam } from "h3";
-import { analyticsWindow, parseAnalyticsPeriod, averagePerDay, growth, chartWindow, dailySeries } from "~/server/utils/analytics-window.mjs";
+import { analyticsWindow, parseAnalyticsPeriod, growth, chartWindow, dailySeries } from "~/server/utils/analytics-window.mjs";
 import { presentQr, readQrSnapshot, serverQrStage } from '~/server/utils/qr-issuance.mjs'
 
 export default defineEventHandler(async (event) => {
@@ -28,67 +29,85 @@ export default defineEventHandler(async (event) => {
     try { period = parseAnalyticsPeriod(query.period); }
     catch { throw createError({ statusCode: 400, statusMessage: "Invalid analytics period" }); }
     const window = analyticsWindow(period, new Date());
-    const timestamp = { ...(window.previous ? { gte: window.previous.start } : {}), lt: window.end };
     const chart = chartWindow(window);
 
-    // Ensure the QR belongs to this user
-    const qr = await readQrSnapshot(prisma, (tx) => tx.qRCode.findFirst({
-      where: { id, userId: user.sub },
-      select: {
-        userId: true,
-        issuedEncodedTarget: true,
-        lifecycleStatus: true,
-        errorLevel: true,
-        shortUrlId: true,
-        id: true,
-        title: true,
-        data: true,
-        createdAt: true,
-        shortUrl: {
-          select: {
-            id: true,
-            originalUrl: true,
-            userId: true,
-            shortCode: true,
+    const { qr, summary, recentScans } = await readQrSnapshot(prisma, async (tx: Prisma.TransactionClient) => {
+      const qr = await tx.qRCode.findFirst({
+        where: { id, userId: user.sub },
+        select: {
+          userId: true,
+          issuedEncodedTarget: true,
+          lifecycleStatus: true,
+          errorLevel: true,
+          shortUrlId: true,
+          id: true,
+          title: true,
+          data: true,
+          createdAt: true,
+          shortUrl: {
+            select: {
+              id: true,
+              originalUrl: true,
+              userId: true,
+              shortCode: true,
+            },
           },
         },
-      },
-    }));
-
-    if (!qr) {
-      throw createError({
-        statusCode: 404,
-        statusMessage: "QR code not found",
       });
-    }
 
-    const presented = presentQr(qr, user.sub, useRuntimeConfig(event), process.env.VERCEL_ENV, serverQrStage(process.env));
+      if (!qr) throw createError({ statusCode: 404, statusMessage: "QR code not found" });
 
-    // Pull scans for this QR (within period)
-    const scans = await prisma.analytics.findMany({
-      where: {
-        qrCodeId: qr.id,
-        timestamp,
-      },
-      orderBy: { timestamp: "desc" },
-      select: {
-        id: true,
-        timestamp: true,
-        ipAddress: true,
-        userAgent: true,
-      },
+      const [summary] = await tx.$queryRaw<Array<{
+        totalScans: bigint;
+        previousScans: bigint;
+        buckets: { date: string; scans: number }[];
+      }>>`
+        WITH bounds AS (
+          SELECT
+            ${window.start?.toISOString() ?? null}::timestamptz AT TIME ZONE 'UTC' AS current_start,
+            ${window.end.toISOString()}::timestamptz AT TIME ZONE 'UTC' AS current_end,
+            ${window.previous?.start.toISOString() ?? null}::timestamptz AT TIME ZONE 'UTC' AS previous_start,
+            ${window.previous?.end.toISOString() ?? null}::timestamptz AT TIME ZONE 'UTC' AS previous_end,
+            ${chart.start.toISOString()}::timestamptz AT TIME ZONE 'UTC' AS chart_start
+        ), scoped AS NOT MATERIALIZED (
+          SELECT a."timestamp", b.*
+          FROM public."Analytics" a
+          JOIN public."QRCode" q ON q.id = a."qrCodeId"
+          CROSS JOIN bounds b
+          WHERE q.id = ${qr.id} AND q."userId" = ${user.sub}
+            AND a."timestamp" < b.current_end
+            AND (b.previous_start IS NULL OR a."timestamp" >= b.previous_start)
+        ), daily AS (
+          SELECT "timestamp"::date AS day, count(*) AS scans
+          FROM scoped
+          WHERE "timestamp" >= chart_start
+          GROUP BY "timestamp"::date
+        )
+        SELECT
+          count(*) FILTER (WHERE current_start IS NULL OR "timestamp" >= current_start) AS "totalScans",
+          count(*) FILTER (WHERE "timestamp" < previous_end) AS "previousScans",
+          (SELECT coalesce(jsonb_agg(jsonb_build_object('date', to_char(day, 'YYYY-MM-DD'), 'scans', scans)
+            ORDER BY day), '[]'::jsonb) FROM daily) AS buckets
+        FROM scoped
+      `;
+
+      const recentScans = await tx.analytics.findMany({
+        where: {
+          qrCodeId: qr.id,
+          qrCode: { userId: user.sub },
+          timestamp: { ...(window.start ? { gte: window.start } : {}), lt: window.end },
+        },
+        orderBy: [{ timestamp: "desc" }, { id: "desc" }],
+        take: 50,
+        select: { id: true, timestamp: true, ipAddress: true, userAgent: true },
+      });
+      return { qr, summary, recentScans };
     });
-
-    const currentScans = scans.filter((scan) => (!window.start || new Date(scan.timestamp) >= window.start) && new Date(scan.timestamp) < window.end);
-    const previousScans = window.previous ? scans.filter((scan) => new Date(scan.timestamp) >= window.previous!.start && new Date(scan.timestamp) < window.previous!.end).length : null;
-    const totalScans = currentScans.length;
-    const uniqueVisitors = null;
-    const avgScansPerDay = averagePerDay(totalScans, null);
+    const presented = presentQr(qr, user.sub, useRuntimeConfig(event), process.env.VERCEL_ENV, serverQrStage(process.env));
+    const totalScans = Number(summary.totalScans);
+    const previousScans = window.previous ? Number(summary.previousScans) : null;
     const comparison = growth(totalScans, previousScans, false);
-    const series = dailySeries(currentScans, chart);
-
-    // Latest scans table (cap payload)
-    const recentScans = currentScans.slice(0, 50);
+    const series = dailySeries(summary.buckets, chart);
 
     return {
       success: true,
@@ -107,8 +126,8 @@ export default defineEventHandler(async (event) => {
       },
       stats: {
         totalScans,
-        uniqueVisitors,
-        avgScansPerDay,
+        uniqueVisitors: null,
+        avgScansPerDay: null,
       },
       series,
       range: { ...window, chart, previousScans, growthStatus: comparison.status, coverage: "unknown" },
