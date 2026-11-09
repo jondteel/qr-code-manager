@@ -54,7 +54,7 @@
           </div>
 
           <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <p class="text-sm text-gray-600 mb-1">Active QR Codes</p>
+            <p class="text-sm text-gray-600 mb-1">QR Codes Scanned</p>
             <p class="text-3xl font-bold text-gray-900">{{ stats.activeQRCodes }}</p>
             <p class="text-xs text-gray-500 mt-2">Scanned this period</p>
           </div>
@@ -107,6 +107,7 @@
               <div class="flex items-start sm:items-center justify-between gap-3">
                 <div class="flex-1 min-w-0">
                   <h4 class="font-semibold text-gray-900 truncate">{{ qr.title }}</h4>
+                  <p class="text-xs font-semibold capitalize text-gray-600">{{ qr.lifecycleStatus }}</p>
                   <p class="text-sm text-gray-500 mt-1 truncate">{{ qr.data }}</p>
                 </div>
                 <div class="text-right ml-2 sm:ml-4 shrink-0">

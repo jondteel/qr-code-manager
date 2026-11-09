@@ -56,6 +56,7 @@
         </button>
       </form>
 
+      <NuxtLink to="/forgot-password" class="block mt-5 text-blue-700 underline">Forgot password?</NuxtLink>
       <p class="mt-6 text-center text-gray-600">
         Don't have an account?
         <NuxtLink to="/signup" class="text-blue-600 hover:text-blue-700 font-semibold">
@@ -66,78 +67,28 @@
   </div>
 </template>
 
+
 <script setup lang="ts">
-const supabase = useSupabaseClient();
-const user = useSupabaseUser();
-const route = useRoute();
-
-const email = ref("");
-const password = ref("");
-const errorMessage = ref("");
-const isSubmitting = ref(false);
-
-// Redirect if already logged in
-watch(
-  () => user.value,
-  async (currentUser) => {
-    if (!currentUser) return;
-
-    const redirectParam = route.query.redirect;
-    const redirectTo =
-      typeof redirectParam === "string" && redirectParam.startsWith("/")
-        ? redirectParam
-        : "/dashboard";
-
-    await navigateTo(redirectTo);
-  },
-  { immediate: true }
-);
-
-// Clear error when user edits fields
-watch([email, password], () => {
-  if (errorMessage.value) errorMessage.value = "";
-});
-
+import { accountReturnPath } from '~/utils/auth-navigation.mjs'
+const supabase = useSupabaseClient(), route = useRoute()
+const readiness = useAccountReadiness()
+const email = ref(''), password = ref(''), errorMessage = ref(''), isSubmitting = ref(false)
+const continueAccount = async () => {
+  const result = await readiness()
+  if (result.state === 'invalid-session') return
+  const target = accountReturnPath(route.query.redirect)
+  await navigateTo(result.state === 'ready' ? target : { path: '/onboarding', query: { redirect: target } })
+}
+onMounted(continueAccount)
 const handleLogin = async () => {
-  if (isSubmitting.value) return;
-
+  if (isSubmitting.value) return
+  isSubmitting.value = true; errorMessage.value = ''
   try {
-    isSubmitting.value = true;
-    errorMessage.value = "";
-
-    const normalizedEmail = email.value.trim().toLowerCase();
-    const pw = password.value;
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email: normalizedEmail,
-      password: pw,
-    });
-
-    if (error) {
-      // Friendlier fallback messages
-      const msg = error.message?.toLowerCase() || "";
-      if (
-        msg.includes("invalid login credentials") ||
-        msg.includes("invalid credentials")
-      ) {
-        errorMessage.value = "Invalid email or password.";
-      } else {
-        errorMessage.value = error.message || "Unable to sign in.";
-      }
-      return;
-    }
-
-    const redirectParam = route.query.redirect;
-    const redirectTo =
-      typeof redirectParam === "string" && redirectParam.startsWith("/")
-        ? redirectParam
-        : "/dashboard";
-
-    await navigateTo(redirectTo);
-  } catch {
-    errorMessage.value = "An error occurred during login.";
-  } finally {
-    isSubmitting.value = false;
-  }
-};
+    const { error } = await supabase.auth.signInWithPassword({ email: email.value.trim().toLowerCase(), password: password.value })
+    password.value = ''
+    if (error) { errorMessage.value = 'Unable to sign in. Check your credentials and email confirmation, or try again later.'; return }
+    await continueAccount()
+  } catch { errorMessage.value = 'Unable to sign in. Please try again later.' }
+  finally { isSubmitting.value = false }
+}
 </script>

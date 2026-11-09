@@ -1,6 +1,6 @@
 // server/api/analytics/overview.get.ts
 import prisma from "~/server/utils/prisma";
-import { serverSupabaseUser } from "#supabase/server";
+import { requireEmailAccount } from "~/server/utils/require-email-account";
 import { createError, getQuery } from "h3";
 
 type PeriodValue = 7 | 30 | 90 | "all";
@@ -17,7 +17,7 @@ function parsePeriod(raw: unknown): PeriodValue {
 export default defineEventHandler(async (event) => {
   try {
     // Auth
-    const user = await serverSupabaseUser(event);
+    const user = await requireEmailAccount(event);
     if (!user?.sub) {
       throw createError({
         statusCode: 401,
@@ -44,6 +44,7 @@ export default defineEventHandler(async (event) => {
       select: {
         id: true,
         title: true,
+        lifecycleStatus: true,
         data: true,
         analytics: {
           where: {
@@ -126,6 +127,7 @@ export default defineEventHandler(async (event) => {
       .map((qr) => ({
         id: qr.id,
         title: qr.title,
+        lifecycleStatus: qr.lifecycleStatus,
         data: qr.data,
         scanCount: qr.analytics.length,
       }))
@@ -147,7 +149,7 @@ export default defineEventHandler(async (event) => {
   } catch (error: any) {
     if (error?.statusCode) throw error;
 
-    console.error("Analytics overview error:", error);
+    console.error({ event: 'analytics-overview', outcome: 'failed', reason: 'unexpected-error' });
 
     throw createError({
       statusCode: 500,

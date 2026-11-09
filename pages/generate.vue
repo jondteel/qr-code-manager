@@ -17,19 +17,26 @@
         <!-- Form -->
         <section class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
           <div class="space-y-6">
+            <div>
+              <label for="qr-mode" class="block text-sm font-medium text-gray-900 mb-1">QR mode</label>
+              <select id="qr-mode" v-model="createShortUrl" :disabled="!!savedQrId" class="w-full rounded-lg border border-gray-300 px-3 py-2">
+                <option :value="true">Tracked HTTP(S) destination</option>
+                <option :value="false">Direct content (no server scan analytics)</option>
+              </select>
+            </div>
             <!-- Content -->
             <div>
-              <label class="block text-sm font-medium text-gray-900 mb-1">
+              <label for="qr-content" class="block text-sm font-medium text-gray-900 mb-1">
                 QR Content
               </label>
-              <textarea
+              <textarea id="qr-content"
                 v-model="content"
                 rows="4"
                 class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Paste a URL or any text..."
               />
-              <div class="flex items-center justify-between mt-2 gap-3">
-                <p class="text-xs text-gray-500">
+              <div class="flex flex-wrap items-center justify-between mt-2 gap-3">
+                <p class="min-w-0 text-xs text-gray-500 [overflow-wrap:anywhere]">
                   Tip: URLs are most common (e.g., https://example.com)
                 </p>
                 <p class="text-xs text-gray-500 shrink-0">{{ content.length }} chars</p>
@@ -38,10 +45,10 @@
 
             <!-- Label -->
             <div>
-              <label class="block text-sm font-medium text-gray-900 mb-1">
+              <label for="qr-label" class="block text-sm font-medium text-gray-900 mb-1">
                 Label / Name *
               </label>
-              <input
+              <input id="qr-label"
                 v-model="label"
                 type="text"
                 required
@@ -57,10 +64,10 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <!-- Size -->
               <div>
-                <label class="block text-sm font-medium text-gray-900 mb-1">
+                <label for="qr-size" class="block text-sm font-medium text-gray-900 mb-1">
                   Size: <span class="text-gray-600 font-normal">{{ size }}px</span>
                 </label>
-                <input
+                <input id="qr-size"
                   v-model.number="size"
                   type="range"
                   min="128"
@@ -75,37 +82,39 @@
 
               <!-- Margin -->
               <div>
-                <label class="block text-sm font-medium text-gray-900 mb-1">
+                <label for="qr-margin" class="block text-sm font-medium text-gray-900 mb-1">
                   Margin: <span class="text-gray-600 font-normal">{{ margin }}</span>
                 </label>
-                <input
+                <input id="qr-margin"
                   v-model.number="margin"
                   type="range"
-                  min="0"
+                  min="4"
                   max="10"
                   step="1"
                   class="w-full"
                 />
                 <div class="flex justify-between text-xs text-gray-500 mt-1">
-                  <span>0</span><span>10</span>
+                  <span>4</span><span>10</span>
                 </div>
               </div>
 
+              <p class="text-xs text-gray-600 md:col-span-2">Extra margin applies to this preview and PNG. Other saved views use a four-module quiet zone.</p>
+
               <!-- Foreground -->
               <div>
-                <label class="block text-sm font-medium text-gray-900 mb-1">
+                <label for="qr-foreground" class="block text-sm font-medium text-gray-900 mb-1">
                   Foreground
                 </label>
-                <div class="flex items-center gap-3">
-                  <input
+                <div class="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+                  <input aria-label="Foreground color picker"
                     v-model="fgColor"
                     type="color"
                     class="h-10 w-14 p-1 rounded border border-gray-300 bg-white shrink-0"
                   />
-                  <input
+                  <input id="qr-foreground"
                     v-model="fgColor"
                     type="text"
-                    class="min-w-0 flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    class="w-full min-w-0 flex-1 sm:w-auto rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="#000000"
                   />
                 </div>
@@ -119,19 +128,19 @@
 
               <!-- Background -->
               <div>
-                <label class="block text-sm font-medium text-gray-900 mb-1">
+                <label for="qr-background" class="block text-sm font-medium text-gray-900 mb-1">
                   Background
                 </label>
-                <div class="flex items-center gap-3">
-                  <input
+                <div class="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+                  <input aria-label="Background color picker"
                     v-model="bgColor"
                     type="color"
                     class="h-10 w-14 p-1 rounded border border-gray-300 bg-white shrink-0"
                   />
-                  <input
+                  <input id="qr-background"
                     v-model="bgColor"
                     type="text"
-                    class="min-w-0 flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    class="w-full min-w-0 flex-1 sm:w-auto rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="#FFFFFF"
                   />
                 </div>
@@ -145,10 +154,10 @@
 
               <!-- Error correction -->
               <div class="md:col-span-2">
-                <label class="block text-sm font-medium text-gray-900 mb-1">
+                <label for="qr-correction" class="block text-sm font-medium text-gray-900 mb-1">
                   Error Correction
                 </label>
-                <select
+                <select id="qr-correction"
                   v-model="errorCorrectionLevel"
                   class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
@@ -165,24 +174,24 @@
 
             <!-- Save/Download Status -->
             <div
-              v-if="savedShortCode"
+              v-if="savedQrId"
               class="rounded-lg border border-green-200 bg-green-50 p-3 text-sm"
             >
               <p class="text-green-800 font-medium">
-                Tracked QR saved
+                {{ savedShortCode ? "Tracked QR saved" : "Direct QR saved (no server scan analytics)" }}
                 <span v-if="isDirtySinceSave" class="font-normal">
                   (changes made since last save)
                 </span>
               </p>
-              <p class="text-green-700 mt-1 break-all">Tracking link: {{ trackedUrl }}</p>
-              <p v-if="savedQrId" class="text-green-700 mt-1">QR ID: {{ savedQrId }}</p>
+              <p v-if="savedShortCode" class="text-green-700 mt-1 break-all">Tracking link: {{ trackedUrl }}</p>
+              <p v-if="savedQrId" class="text-green-700 mt-1 break-all">QR ID: {{ savedQrId }}</p>
             </div>
 
             <!-- Actions -->
             <div class="flex flex-col sm:flex-row gap-3">
               <button
                 type="button"
-                class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+                class="min-w-0 flex-1 [overflow-wrap:anywhere] bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
                 :disabled="!canSave || isSaving"
                 :class="!canSave || isSaving ? 'opacity-60 cursor-not-allowed' : ''"
                 @click="saveTrackedQr"
@@ -198,7 +207,7 @@
 
               <button
                 type="button"
-                class="flex-1 bg-emerald-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-emerald-700 transition"
+                class="min-w-0 flex-1 [overflow-wrap:anywhere] bg-emerald-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-emerald-700 transition"
                 :disabled="!canDownloadSaved || isDownloading"
                 :class="!canDownloadSaved || isDownloading ? 'opacity-60 cursor-not-allowed' : ''"
                 @click="downloadSavedPng"
@@ -208,7 +217,7 @@
 
               <button
                 type="button"
-                class="sm:w-auto bg-gray-100 text-gray-800 px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition"
+                class="min-w-0 [overflow-wrap:anywhere] sm:w-auto bg-gray-100 text-gray-800 px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition"
                 @click="resetToDefaults"
               >
                 Reset
@@ -216,8 +225,7 @@
             </div>
 
             <p class="text-xs text-gray-500">
-              Preview uses your direct content. Downloaded PNG uses the saved tracked short
-              link.
+              Draft preview encodes your content. For tracked QRs, the final payload will be the server-issued short link. After saving, preview and PNG use that saved payload.
             </p>
 
             <p v-if="errorMessage" class="text-sm text-red-600">{{ errorMessage }}</p>
@@ -227,8 +235,8 @@
 
         <!-- Preview -->
         <section class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-semibold text-gray-900">Live Preview</h2>
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <h2 class="min-w-0 text-lg font-semibold text-gray-900 [overflow-wrap:anywhere]">{{ savedEncodedTarget && !isDirtySinceSave ? "Saved payload preview" : "Draft preview" }}</h2>
             <div class="text-xs text-gray-500">{{ size }}×{{ size }}</div>
           </div>
 
@@ -237,7 +245,7 @@
               class="rounded-lg border border-gray-200 bg-gray-50 p-4 sm:p-6 flex items-center justify-center"
             >
               <div class="flex flex-col items-center gap-3 w-full">
-                <canvas ref="canvasRef" class="bg-white rounded max-w-full" />
+                <canvas v-show="renderedKey === previewKey" ref="canvasRef" class="bg-white rounded max-w-full" />
                 <p class="text-xs text-gray-500 text-center">
                   {{
                     canGenerate
@@ -256,6 +264,9 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { generatorQrTarget, savedQrTarget } from "~/utils/qr-payload.mjs";
+import { renderQrCanvas } from "~/utils/qr-render.mjs";
+import { canvasToPngBlob } from "~/server/utils/qrToBlob.ts";
 import { downloadPngBlob } from "~/server/utils/downloadQrPng";
 
 const supabase = useSupabaseClient();
@@ -281,6 +292,10 @@ function onDocumentClick(e: MouseEvent) {
 }
 
 type QRCreateResponse = {
+  mode: "tracked" | "direct";
+  encodedTarget: string;
+  payloadState?: "exact-issued" | "direct-content" | "canonical-regeneration" | "unavailable";
+  payloadStatus?: string;
   success?: boolean;
   error?: string;
   qrCode?: {
@@ -298,11 +313,14 @@ type QRCreateResponse = {
 
 type ECL = "L" | "M" | "Q" | "H";
 
+const createShortUrl = ref(true);
+const savedEncodedTarget = ref<string | null>(null);
+const savedContent = ref<string | null>(null);
 const content = ref<string>("");
 const label = ref<string>("");
 
 const size = ref<number>(320);
-const margin = ref<number>(2);
+const margin = ref<number>(4);
 const fgColor = ref<string>("#111827");
 const bgColor = ref<string>("#ffffff");
 const errorCorrectionLevel = ref<ECL>("M");
@@ -332,16 +350,23 @@ const isDirtySinceSave = computed(() => {
 });
 
 const canDownloadSaved = computed(() => {
-  return !!savedShortCode.value && !isDirtySinceSave.value;
+  return !!savedEncodedTarget.value && !isDirtySinceSave.value && !isSaving.value;
 });
 
-const trackedUrl = computed(() => {
-  if (!savedShortCode.value || !process.client) return "";
-  return `${window.location.origin}/s/${savedShortCode.value}`;
-});
+const trackedUrl = computed(() => savedShortCode.value ? savedEncodedTarget.value || "" : "");
+const previewTarget = computed(() => generatorQrTarget({
+  savedTarget: savedEncodedTarget.value, dirty: isDirtySinceSave.value,
+  content: content.value, tracked: createShortUrl.value,
+}));
 
 // ---- QR library ----
 let QRCode: any = null;
+let active = true;
+let saveEpoch = 0;
+const renderSettings = computed(() => ({ size: size.value, margin: margin.value, errorLevel: errorCorrectionLevel.value, fgColor: safeFgColor.value, bgColor: safeBgColor.value }));
+const exportFingerprint = computed(() => JSON.stringify([savedQrId.value, savedEncodedTarget.value, currentFingerprint.value, isSaving.value]));
+const previewKey = computed(() => JSON.stringify([previewTarget.value, renderSettings.value]));
+const renderedKey = ref<string | null>(null);
 
 async function loadQrLib() {
   if (QRCode) return QRCode;
@@ -378,7 +403,8 @@ const safeBgColor = computed(() => normalizeHexColor(bgColor.value, "#ffffff"));
 // ---- Fingerprint (used to prevent duplicate downloads after edits without re-save) ----
 const currentFingerprint = computed(() => {
   return JSON.stringify({
-    content: content.value.trim(),
+    content: content.value,
+    createShortUrl: createShortUrl.value,
     label: label.value.trim(),
     size: size.value,
     margin: margin.value,
@@ -431,17 +457,18 @@ async function renderQr() {
     const QR = await loadQrLib();
     if (requestId !== renderRequestId) return;
 
-    await QR.toCanvas(canvas, content.value.trim(), {
-      width: size.value,
-      margin: margin.value,
-      errorCorrectionLevel: errorCorrectionLevel.value,
-      color: {
-        dark: safeFgColor.value,
-        light: safeBgColor.value,
-      },
-    });
+    const key = previewKey.value;
+    const buffer = document.createElement("canvas");
+    await renderQrCanvas(QR, buffer, previewTarget.value, renderSettings.value);
+    if (!active || key !== previewKey.value || requestId !== renderRequestId) return;
+    canvas.width = buffer.width;
+    canvas.height = buffer.height;
+    canvas.getContext("2d")?.drawImage(buffer, 0, 0);
+    renderedKey.value = key;
   } catch (e: any) {
-    errorMessage.value = e?.message ?? "Failed to render QR code.";
+    renderedKey.value = null;
+    clearCanvas();
+    errorMessage.value = "Could not render QR image. Check content, colors and size.";
   }
 }
 
@@ -452,7 +479,7 @@ function scheduleRender(delay = 120) {
   }, delay);
 }
 
-watch([content, size, margin, fgColor, bgColor, errorCorrectionLevel], () => {
+watch([previewTarget, size, margin, fgColor, bgColor, errorCorrectionLevel], () => {
   errorMessage.value = "";
   scheduleRender();
 });
@@ -463,12 +490,17 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  active = false;
+  saveEpoch++;
   if (renderTimer) clearTimeout(renderTimer);
   document.removeEventListener("click", onDocumentClick);
 });
 
 // ---- Actions ----
 function resetSavedState() {
+  saveEpoch++;
+  savedEncodedTarget.value = null;
+  savedContent.value = null;
   savedQrId.value = null;
   savedShortCode.value = null;
   lastSavedFingerprint.value = null;
@@ -478,7 +510,7 @@ function resetToDefaults() {
   content.value = "";
   label.value = "";
   size.value = 320;
-  margin.value = 2;
+  margin.value = 4;
   fgColor.value = "#111827";
   bgColor.value = "#ffffff";
   errorCorrectionLevel.value = "M";
@@ -490,6 +522,8 @@ function resetToDefaults() {
 }
 
 async function saveTrackedQr() {
+  if (!active || isSaving.value) return;
+  const epoch = ++saveEpoch;
   if (!canSave.value) {
     errorMessage.value = "Please enter both content and a label";
     return;
@@ -500,13 +534,19 @@ async function saveTrackedQr() {
   successMessage.value = "";
 
   try {
+    const submittedFingerprint = currentFingerprint.value;
     // If we've already saved once, update the existing QR instead of creating a new one
     if (savedQrId.value) {
+      const acceptedContent = createShortUrl.value ? content.value.trim() : content.value;
+      if (acceptedContent !== savedContent.value) {
+        throw new Error("Content changes require the destination-edit repair. Reset to create a separate QR.");
+      }
+      const QR = await loadQrLib();
+      QR.create(savedEncodedTarget.value, { errorCorrectionLevel: errorCorrectionLevel.value });
       const updateResponse = await $fetch<any>(`/api/qr/${savedQrId.value}`, {
         method: "PUT",
         body: {
           title: label.value.trim(),
-          data: content.value.trim(),
           size: size.value,
           fgColor: safeFgColor.value,
           bgColor: safeBgColor.value,
@@ -518,9 +558,13 @@ async function saveTrackedQr() {
         throw new Error(updateResponse.error);
       }
 
+      if (!active || epoch !== saveEpoch) return;
+      savedEncodedTarget.value = savedQrTarget(updateResponse.qrCode);
+      savedContent.value = updateResponse.qrCode?.data ?? null;
+      if (!savedEncodedTarget.value) throw new Error("Saved QR target is unavailable. Reload to verify it.");
       // Keep same short code (tracked link remains tied to this QR)
-      lastSavedFingerprint.value = currentFingerprint.value;
-      successMessage.value = "Tracked QR updated successfully. You can now download the PNG.";
+      lastSavedFingerprint.value = submittedFingerprint;
+      successMessage.value = "QR styling updated successfully. You can now download the PNG.";
       return;
     }
 
@@ -529,28 +573,31 @@ async function saveTrackedQr() {
       method: "POST",
       body: {
         title: label.value.trim(),
-        data: content.value.trim(),
+        data: content.value,
         size: size.value,
         fgColor: safeFgColor.value,
         bgColor: safeBgColor.value,
         errorLevel: errorCorrectionLevel.value,
-        createShortUrl: true,
+        createShortUrl: createShortUrl.value,
       },
     });
 
+    if (!active || epoch !== saveEpoch) return;
     if (qrResponse.error) {
       throw new Error(qrResponse.error);
     }
 
-    if (!qrResponse.shortUrl?.shortCode) {
-      throw new Error("Failed to generate tracking URL");
+    if (!savedQrTarget(qrResponse) || (qrResponse.mode === "tracked" && !qrResponse.shortUrl?.shortCode)) {
+      throw new Error("Server did not return an encoded target");
     }
 
-    savedShortCode.value = qrResponse.shortUrl.shortCode;
+    savedEncodedTarget.value = savedQrTarget(qrResponse);
+    savedContent.value = qrResponse.qrCode?.data ?? null;
+    savedShortCode.value = qrResponse.shortUrl?.shortCode ?? null;
     savedQrId.value = qrResponse.qrCode?.id ?? null;
-    lastSavedFingerprint.value = currentFingerprint.value;
+    lastSavedFingerprint.value = submittedFingerprint;
 
-    successMessage.value = "Tracked QR saved successfully. You can now download the PNG.";
+    successMessage.value = "QR saved successfully. You can now download the PNG.";
   } catch (e: any) {
     errorMessage.value = e?.message ?? "Failed to save tracked QR code.";
   } finally {
@@ -559,62 +606,33 @@ async function saveTrackedQr() {
 }
 
 async function downloadSavedPng() {
-  if (!savedShortCode.value) {
-    errorMessage.value = "Please save/create a tracked QR first.";
+  if (isDownloading.value) return;
+  if (!active || !canDownloadSaved.value) {
+    errorMessage.value = "Save a verified QR with the current settings before downloading.";
     return;
   }
-
-  if (isDirtySinceSave.value) {
-    errorMessage.value =
-      "You changed the QR after saving. Save changes first, then download.";
-    return;
-  }
-
+  const key = exportFingerprint.value;
+  const target = savedEncodedTarget.value;
+  const settings = { ...renderSettings.value };
+  const filename = toSafeFilename(label.value);
   isDownloading.value = true;
   errorMessage.value = "";
   successMessage.value = "";
-
   try {
-    const canvas = canvasRef.value;
-    if (!canvas) throw new Error("QR canvas not ready yet.");
-
-    const shortUrl = `${window.location.origin}/s/${savedShortCode.value}`;
-
     const QR = await loadQrLib();
-    await QR.toCanvas(canvas, shortUrl, {
-      width: size.value,
-      margin: margin.value,
-      errorCorrectionLevel: errorCorrectionLevel.value,
-      color: {
-        dark: safeFgColor.value,
-        light: safeBgColor.value,
-      },
-    });
-
-    // ✅ Canvas -> Blob (mobile-friendly)
-    const blob = await new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob(
-        (b) => (b ? resolve(b) : reject(new Error("Failed to create PNG blob"))),
-        "image/png"
-      );
-    });
-
-    await downloadPngBlob(blob, {
-      filename: toSafeFilename(label.value),
-      preferShare: true,
-      openInNewTabFallback: true,
-    });
-
+    const canvas = document.createElement("canvas");
+    await renderQrCanvas(QR, canvas, target, settings);
+    const blob = await canvasToPngBlob(canvas);
+    if (!active || key !== exportFingerprint.value || !canDownloadSaved.value) throw new Error("QR changed");
+    await downloadPngBlob(blob, { filename, preferShare: true, openInNewTabFallback: true, isCurrent: () => active && key === exportFingerprint.value && canDownloadSaved.value });
     successMessage.value = "PNG ready to save.";
-
-    // Re-render preview back to direct content (your intended behavior)
-    await renderQr();
-  } catch (e: any) {
-    errorMessage.value = e?.message ?? "Failed to download QR code.";
+  } catch {
+    errorMessage.value = "Could not export PNG. Check the QR settings and save changes before retrying.";
   } finally {
     isDownloading.value = false;
   }
 }
+
 function toSafeFilename(raw: string) {
   const base = String(raw ?? "qr_code")
     .trim()

@@ -1,11 +1,12 @@
 import prisma from '~/server/utils/prisma'
-import { serverSupabaseUser } from '#supabase/server'
-import { createError } from 'h3'
+import { requireEmailAccount } from '~/server/utils/require-email-account'
+import { createError, getQuery } from 'h3'
+import { presentQr, readQrSnapshot, serverQrStage } from '~/server/utils/qr-issuance.mjs'
 
 export default defineEventHandler(async (event) => {
   try {
     // Auth
-    const user = await serverSupabaseUser(event)
+    const user = await requireEmailAccount(event)
     if (!user?.sub) {
       throw createError({
         statusCode: 401,
@@ -13,12 +14,18 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    const status = getQuery(event).status ?? 'active'
+    if (!['active', 'archived', 'retired'].includes(status as string)) throw createError({ statusCode: 400, statusMessage: 'Invalid QR lifecycle filter' })
+
     // Fetch user's QR codes (minimal fields needed for dashboard)
-    const qrCodes = await prisma.qRCode.findMany({
+    const qrCodes = await readQrSnapshot(prisma, (tx) => tx.qRCode.findMany({
       where: {
         userId: user.sub, // ✅ fixed
       },
       select: {
+        userId: true,
+        issuedEncodedTarget: true,
+        lifecycleStatus: true,
         id: true,
         title: true,
         description: true,
@@ -32,6 +39,7 @@ export default defineEventHandler(async (event) => {
         updatedAt: true,
         shortUrl: {
           select: {
+            userId: true,
             id: true,
             shortCode: true,
             originalUrl: true,
@@ -48,7 +56,7 @@ export default defineEventHandler(async (event) => {
       orderBy: {
         createdAt: 'desc',
       },
-    })
+    }))
 
     // Stats
     const totalQRCodes = qrCodes.length
@@ -65,7 +73,7 @@ export default defineEventHandler(async (event) => {
 
     return {
       success: true,
-      qrCodes,
+      qrCodes: qrCodes.filter(qr => qr.lifecycleStatus === status).map((qr) => presentQr(qr, user.sub, useRuntimeConfig(event), process.env.VERCEL_ENV, serverQrStage(process.env))),
       stats: {
         totalQRCodes,
         totalShortUrls,
@@ -76,7 +84,7 @@ export default defineEventHandler(async (event) => {
   } catch (error: any) {
     if (error?.statusCode) throw error
 
-    console.error('List QR codes error:', error)
+    console.error({ event: 'qr-list', outcome: 'failed', reason: 'unexpected-error' })
 
     throw createError({
       statusCode: 500,

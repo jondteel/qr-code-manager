@@ -39,7 +39,9 @@
       <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Form -->
         <section class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <QrLifecycleActions :qr="qrCode" :disabled="saving || loading || !!error" @busy="value => lifecycleBusy = value" @changed="applyLifecycle" @reload="refresh" />
           <form class="space-y-6" @submit.prevent="saveChanges">
+            <fieldset :disabled="saving || lifecycleBusy || qrCode.lifecycleStatus === 'retired'" class="space-y-6">
             <!-- Title -->
             <div>
               <label class="block text-sm font-medium text-gray-900 mb-1">Title *</label>
@@ -51,16 +53,16 @@
               />
             </div>
 
-            <!-- Destination URL (read-only) -->
+            <!-- Mode is immutable; only destination/content can change. -->
             <div>
-              <label class="block text-sm font-medium text-gray-900 mb-1">Destination URL</label>
-              <input
-                :value="qrCode.data"
-                type="text"
-                disabled
-                class="w-full rounded-lg border border-gray-300 px-3 py-2 bg-gray-50 text-gray-500 cursor-not-allowed"
+              <label class="block text-sm font-medium text-gray-900 mb-1">{{ qrCode.mode === "tracked" ? "Destination URL" : "Direct content" }}</label>
+              <textarea
+                v-model="form.data"
+                :rows="qrCode.mode === 'tracked' ? 1 : 3"
+                :disabled="saving"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500"
               />
-              <p class="text-xs text-gray-500 mt-1">The destination URL cannot be changed</p>
+              <p class="text-xs text-gray-500 mt-1">Save to update the destination or exact direct content. Existing tracked QR links stay the same.</p>
             </div>
 
             <!-- Description -->
@@ -159,6 +161,7 @@
 
             <p v-if="saveError" class="text-sm text-red-600">{{ saveError }}</p>
             <p v-if="saveSuccess" class="text-sm text-green-600">Changes saved successfully!</p>
+            </fieldset>
           </form>
         </section>
 
@@ -170,7 +173,7 @@
             <button
               type="button"
               @click="downloadPng"
-              :disabled="downloading || !qrCode?.id"
+              :disabled="downloading || lifecycleBusy || saving || loading || !!error || !qrCode?.id || !savedQrTarget(qrCode) || form.data !== qrCode.data"
               class="shrink-0 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <svg
@@ -194,15 +197,21 @@
             <div
               class="rounded-lg border border-gray-200 bg-gray-50 p-6 flex items-center justify-center"
             >
-              <canvas ref="canvasRef" class="bg-white rounded max-w-full"></canvas>
+              <canvas v-show="savedQrTarget(qrCode) && renderedTarget === previewFingerprint && form.data === qrCode.data && !loading && !saving" ref="canvasRef" class="bg-white rounded max-w-full"></canvas>
             </div>
           </ClientOnly>
+
+          <p class="text-sm text-gray-600 mt-3">Save content changes before downloading. Preview and PNG use the verified saved target with the current styling.</p>
 
           <p v-if="downloadError" class="text-sm text-red-600 mt-3">
             {{ downloadError }}
           </p>
 
           <div class="mt-6">
+            <div v-if="savedQrNotice(qrCode)" class="text-sm text-gray-600 mb-4" role="status">
+              <p v-if="qrCode?.payloadState === 'canonical-regeneration' && savedQrTarget(qrCode)" class="font-semibold">Canonical QR regeneration</p>
+              <p>{{ savedQrNotice(qrCode) }}</p>
+            </div>
             <h3 class="text-sm font-semibold text-gray-900 mb-2">QR Code Info</h3>
             <dl class="space-y-2 text-sm">
               <div class="flex justify-between gap-3">
@@ -227,6 +236,8 @@
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { savedQrTarget, savedQrNotice } from "~/utils/qr-payload.mjs";
+import { renderQrCanvas } from "~/utils/qr-render.mjs";
 import { canvasToPngBlob } from "~/server/utils/qrToBlob.ts";
 import { downloadPngBlob } from "~/server/utils/downloadQrPng";
 
@@ -252,6 +263,7 @@ const error = computed(() => fetchError.value?.message || qrData.value?.error);
 // Form state
 const form = ref({
   title: "",
+  data: "",
   description: "",
   size: 320,
   fgColor: "#000000",
@@ -266,6 +278,7 @@ watch(
     if (newQR && newQR.id) {
       form.value = {
         title: newQR.title ?? "",
+        data: newQR.data ?? "",
         description: newQR.description || "",
         size: newQR.size ?? 320,
         fgColor: newQR.fgColor ?? "#000000",
@@ -278,13 +291,18 @@ watch(
 );
 
 // Save state
+const lifecycleBusy = ref(false);
+const applyLifecycle = qr => { qrData.value = { ...qrData.value, qrCode: { ...qrCode.value, ...qr } }; };
 const saving = ref(false);
 const saveError = ref("");
 const saveSuccess = ref(false);
 
 // Preview rendering
 const canvasRef = ref(null);
+const renderedTarget = ref(null);
 let QRCodeLib = null;
+let active = true;
+const previewFingerprint = computed(() => JSON.stringify([id.value, qrCode.value, form.value, loading.value, saving.value, !!error.value, lifecycleBusy.value]));
 
 const loadQrLib = async () => {
   if (QRCodeLib) return QRCodeLib;
@@ -304,27 +322,23 @@ const clearPreviewTimer = () => {
 };
 
 const renderPreviewNow = async () => {
-  if (!canvasRef.value) return;
-  if (!qrCode.value?.id) return;
-
-  await loadQrLib();
-  await nextTick();
-
-  if (!canvasRef.value || !qrCode.value?.id) return;
-
-  const url = qrCode.value.shortUrl
-    ? `${window.location.origin}/s/${qrCode.value.shortUrl.shortCode}`
-    : qrCode.value.data;
-
-  await QRCodeLib.toCanvas(canvasRef.value, url, {
-    width: form.value.size,
-    margin: 2,
-    errorCorrectionLevel: form.value.errorLevel,
-    color: {
-      dark: form.value.fgColor,
-      light: form.value.bgColor,
-    },
-  });
+  renderedTarget.value = null;
+  const key = previewFingerprint.value;
+  const target = savedQrTarget(qrCode.value);
+  if (!active || loading.value || saving.value || lifecycleBusy.value || error.value || !canvasRef.value || !target || form.value.data !== qrCode.value.data) return;
+  const settings = { ...form.value };
+  try {
+    const QR = await loadQrLib();
+    const canvas = document.createElement("canvas");
+    await renderQrCanvas(QR, canvas, target, settings);
+    if (!active || key !== previewFingerprint.value || !canvasRef.value) return;
+    canvasRef.value.width = canvas.width;
+    canvasRef.value.height = canvas.height;
+    canvasRef.value.getContext("2d").drawImage(canvas, 0, 0);
+    renderedTarget.value = key;
+  } catch {
+    downloadError.value = "Could not render QR image. Check content, colors and size.";
+  }
 };
 
 const schedulePreview = () => {
@@ -339,7 +353,7 @@ onMounted(() => {
 });
 
 watch(
-  () => qrCode.value?.id,
+  () => previewFingerprint.value,
   () => schedulePreview()
 );
 
@@ -350,6 +364,7 @@ watch(
 );
 
 onBeforeUnmount(() => {
+  active = false;
   clearPreviewTimer();
 });
 
@@ -365,6 +380,8 @@ const formatDate = (dateString) => {
 
 // Save changes
 const saveChanges = async () => {
+  if (saving.value || loading.value || lifecycleBusy.value || qrCode.value?.lifecycleStatus === 'retired') return;
+  const savingId = id.value;
   saveError.value = "";
   saveSuccess.value = false;
 
@@ -376,10 +393,11 @@ const saveChanges = async () => {
   saving.value = true;
 
   try {
-    await $fetch(`/api/qr/${id.value}`, {
+    const result = await $fetch(`/api/qr/${id.value}`, {
       method: "PUT",
       body: {
         title: form.value.title.trim(),
+        ...(form.value.data !== qrCode.value.data ? { data: form.value.data } : {}),
         description: form.value.description,
         size: form.value.size,
         fgColor: form.value.fgColor,
@@ -388,51 +406,49 @@ const saveChanges = async () => {
       },
     });
 
+    // Commit response is authoritative; refresh supplies the existing scan detail.
+    if (!active || savingId !== id.value) return;
+    qrData.value = result;
     await refresh();
 
     saveSuccess.value = true;
     setTimeout(() => {
-      router.push("/dashboard");
+      if (active && savingId === id.value) router.push("/dashboard");
     }, 1500);
   } catch (err) {
     console.error("Save error:", err);
-    saveError.value = "Failed to save changes";
+    saveError.value = err?.statusCode === 409
+      ? "This QR changed or could not be verified. Reload before trying again."
+      : "Failed to save changes";
   } finally {
     saving.value = false;
   }
 };
 
-// ---- Download (mobile-friendly) ----
+// Export a private canvas and recheck the complete record/form snapshot before delivery.
 const downloading = ref(false);
 const downloadError = ref("");
-
 const downloadPng = async () => {
+  if (downloading.value) return;
   downloadError.value = "";
-  if (!qrCode.value?.id) return;
-
+  const target = savedQrTarget(qrCode.value);
+  if (!active || loading.value || saving.value || lifecycleBusy.value || error.value || !qrCode.value?.id || !target || form.value.data !== qrCode.value.data) {
+    downloadError.value = "Save or reload a verified QR before downloading.";
+    return;
+  }
+  const key = previewFingerprint.value;
+  const settings = { ...form.value };
+  const filename = (settings.title || "qr_code").trim().replace(/[^\w\-]+/g, "_").slice(0, 60) || "qr_code";
+  downloading.value = true;
   try {
-    downloading.value = true;
-
-    const text = qrCode.value.shortUrl?.shortCode
-      ? `${window.location.origin}/s/${qrCode.value.shortUrl.shortCode}`
-      : qrCode.value.data;
-
-    const blob = await canvasToPngBlob({
-      text,
-      size: form.value.size,
-      margin: 2,
-      fgColor: form.value.fgColor,
-      bgColor: form.value.bgColor,
-      errorLevel: form.value.errorLevel,
-    });
-
-    const safeName =
-      (form.value.title || "qr_code").trim().replace(/[^\w\-]+/g, "_").slice(0, 60) + ".png";
-
-    await downloadPngBlob(blob, { filename: safeName, preferShare: true, openInNewTabFallback: true });
-  } catch (e) {
-    console.error("Download error:", e);
-    downloadError.value = "Failed to download PNG.";
+    const QR = await loadQrLib();
+    const canvas = document.createElement("canvas");
+    await renderQrCanvas(QR, canvas, target, settings);
+    const blob = await canvasToPngBlob(canvas);
+    if (!active || key !== previewFingerprint.value) throw new Error("QR changed");
+    await downloadPngBlob(blob, { filename: filename + ".png", preferShare: true, openInNewTabFallback: true, isCurrent: () => active && key === previewFingerprint.value });
+  } catch {
+    downloadError.value = "Could not export PNG. Check the QR settings and try again after saving.";
   } finally {
     downloading.value = false;
   }

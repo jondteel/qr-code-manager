@@ -8,7 +8,10 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "test:keepalive": "node --experimental-vm-modules --test tests/keepalive.test.mjs"
+    "test:auth": "node --experimental-vm-modules --test tests/auth-account.test.mjs tests/auth-admission.test.mjs tests/recovery-foundation.test.mjs tests/recovery-integration.test.mjs",
+    "test:recovery:pg": "node --test tests/recovery-ledger.pg.test.mjs",
+    "test:keepalive": "node --experimental-vm-modules --test tests/keepalive.test.mjs",
+    "test:qr": "node --experimental-vm-modules --test tests/qr-contract.test.mjs tests/qr-provenance.test.mjs tests/qr-consumers.test.mjs tests/qr-edit.test.mjs tests/qr-redirect.test.mjs tests/qr-lifecycle.test.mjs"
   },
   "dependencies": {
     "@nuxtjs/supabase": "^2.0.3",

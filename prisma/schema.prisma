@@ -19,7 +19,14 @@ model User {
   shortUrls ShortUrl[]
 }
 
+enum QRLifecycleStatus {
+  active
+  archived
+  retired
+}
+
 model QRCode {
+  lifecycleStatus QRLifecycleStatus @default(active)
   id          String   @id @default(uuid())
   title       String
   description String?
@@ -28,6 +35,7 @@ model QRCode {
   fgColor     String   @default("#000000")
   bgColor     String   @default("#FFFFFF")
   errorLevel  String   @default("M") // L, M, Q, H
+  issuedEncodedTarget String? @db.Text
   imageUrl    String?  // URL to the generated QR image
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -65,4 +73,52 @@ model Analytics {
   
   shortUrlId String?
   shortUrl   ShortUrl? @relation(fields: [shortUrlId], references: [id], onDelete: Cascade)
+}
+// Application-owned isolated recovery proposal; never an Auth/User ownership FK.
+model RecoverySubject {
+  environment  String
+  project      String
+  subject      String
+  generation   Int
+  state        String
+  version      Int?
+  purpose      String?
+  selector     String? @unique
+  email        String?
+  recipientId  String?
+  keyId        String?
+  secretDigest String?
+  proofMac     String?
+  issuedAtMs   BigInt?
+  expiresAtMs  BigInt?
+  operationId  String? @unique
+  terminalAtMs BigInt?
+
+  @@id([environment, project, subject])
+  @@index([state, expiresAtMs])
+}
+
+model RecoveryAdmission {
+  environment String
+  project     String
+  recipientId String
+  subject     String?
+  state       String
+  operationId String? @unique
+  issuedAtMs  BigInt?
+
+  @@id([environment, project, recipientId])
+  @@index([state, issuedAtMs])
+}
+
+model RecoveryBudget {
+  environment String
+  project     String
+  scope       String
+  key         String
+  windowMs    BigInt
+  attempts    Int
+
+  @@id([environment, project, scope, key])
+  @@index([windowMs])
 }
