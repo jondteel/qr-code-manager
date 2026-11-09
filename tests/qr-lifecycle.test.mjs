@@ -65,7 +65,7 @@ test('retired edits fail and archived tracked/direct exports retain authority',a
 })
 
 test('analytics overview preserves historical metric meaning while labeling retired rows',async()=>{
-  const rows=[{id:'qr',title:'Retired fictional QR',data:'direct',lifecycleStatus:'retired',analytics:[{timestamp:new Date(),ipAddress:'192.0.2.1'}]}]
-  const h=await handlerHarness({qRCode:{findMany:async()=>rows}},{path:'server/api/analytics/overview.get.ts'})
+  const topQRCodes=[{id:'qr',title:'Retired fictional QR',data:'direct',lifecycleStatus:'retired',scanCount:1}]
+  const h=await handlerHarness({$queryRaw:async()=>[{topQRCodes,totalScans:1n,previousScans:0n,activeQRCodes:1n,buckets:[]}]},{path:'server/api/analytics/overview.get.ts'})
   const r=await h.invoke();assert.equal(r.topQRCodes[0].lifecycleStatus,'retired');assert.equal(r.topQRCodes[0].scanCount,1);assert.equal(r.stats.totalScans,1);assert.equal(r.stats.activeQRCodes,1)
 })

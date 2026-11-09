@@ -77,29 +77,33 @@
         Failed to load stats.
       </div>
 
+      <p v-if="!pending && !error && data?.qr?.mode === 'direct'" class="mb-6 text-sm text-gray-700">Tracking is unavailable for direct-content QR codes. Historical associated events may exist but do not measure direct-content scans.</p>
+      <p v-if="!pending && !error" class="mb-6 text-sm text-gray-700">Recorded redirect events are requests to tracked links; repeated and automated requests may be included.</p>
+
       <!-- Stats cards -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div v-if="!pending && !error && data" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <p class="text-sm text-gray-600 mb-1">Total Scans</p>
-          <p class="text-3xl font-bold text-gray-900">{{ stats.totalScans }}</p>
+          <p class="text-sm text-gray-600 mb-1">Recorded redirect events</p>
+          <p class="text-3xl font-bold text-gray-900">{{ data?.qr?.mode === 'direct' && stats.totalScans === 0 ? 'Unavailable' : stats.totalScans }}</p>
         </div>
 
         <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <p class="text-sm text-gray-600 mb-1">Unique Visitors</p>
-          <p class="text-3xl font-bold text-gray-900">{{ stats.uniqueVisitors }}</p>
-          <p class="text-xs text-gray-500 mt-2">Estimated based on IP</p>
+          <p class="text-3xl font-bold text-gray-900">Unavailable</p>
+          <p class="text-xs text-gray-500 mt-2">Unique people cannot be measured reliably</p>
         </div>
 
         <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <p class="text-sm text-gray-600 mb-1">Avg Scans/Day</p>
-          <p class="text-3xl font-bold text-gray-900">{{ stats.avgScansPerDay }}</p>
+          <p class="text-sm text-gray-600 mb-1">Average per day</p>
+          <p class="text-3xl font-bold text-gray-900">Unavailable</p>
         </div>
       </div>
 
+      <template v-if="!pending && !error && data && data.qr?.mode !== 'direct'">
       <!-- Scans Over Time Chart -->
       <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-gray-900">Scans Over Time</h3>
+          <h3 class="text-lg font-semibold text-gray-900">Recorded events over time</h3>
           <button
             @click="refresh()"
             class="text-sm text-blue-600 hover:text-blue-700"
@@ -109,6 +113,7 @@
           </button>
         </div>
 
+        <p class="text-sm text-gray-600 mb-3">Chart dates use UTC. {{ selectedPeriod === "all" ? "All-time totals include all associated events; the chart shows the latest 365 UTC calendar days." : "The chart covers the same period as the total." }} The current day is partial.</p>
         <ClientOnly>
           <div class="relative">
             <canvas ref="chartEl" class="w-full" style="height: 260px"></canvas>
@@ -116,7 +121,7 @@
         </ClientOnly>
 
         <p v-if="series.length === 0" class="text-center text-gray-500 mt-4">
-          No scan data yet for this period.
+          No recorded event data shown for this period.
         </p>
       </div>
 
@@ -125,12 +130,12 @@
         <div
           class="p-6 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
         >
-          <h3 class="text-lg font-semibold text-gray-900">Recent Scans</h3>
+          <h3 class="text-lg font-semibold text-gray-900">Recent recorded events</h3>
           <span class="text-sm text-gray-500">Showing latest 50</span>
         </div>
 
         <div v-if="recentScans.length === 0" class="p-6 text-center text-gray-500">
-          No scans yet in this period
+          No recorded events in this period
         </div>
 
         <div v-else class="overflow-x-auto">
@@ -161,6 +166,7 @@
           </table>
         </div>
       </div>
+      </template>
     </main>
   </div>
 </template>
@@ -214,8 +220,8 @@ const stats = computed(
   () =>
     data.value?.stats || {
       totalScans: 0,
-      uniqueVisitors: 0,
-      avgScansPerDay: 0,
+      uniqueVisitors: null,
+      avgScansPerDay: null,
     }
 );
 
@@ -320,7 +326,7 @@ const renderChart = async () => {
       labels,
       datasets: [
         {
-          label: "Scans",
+          label: "Recorded redirect events",
           data: dataPoints,
           tension: 0.35,
           fill: true,
@@ -352,7 +358,7 @@ const renderChart = async () => {
             },
             label(context) {
               const value = context.parsed?.y ?? 0;
-              return `${value} scan${value === 1 ? "" : "s"}`;
+              return `${value} recorded event${value === 1 ? "" : "s"}`;
             },
           },
         },

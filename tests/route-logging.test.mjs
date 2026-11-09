@@ -12,6 +12,7 @@ import * as zod from 'zod'
 import { Prisma } from '@prisma/client'
 import * as destination from '../server/utils/qr-destination.mjs'
 import * as issuance from '../server/utils/qr-issuance.mjs'
+import * as analyticsWindow from '../server/utils/analytics-window.mjs'
 
 const routes = [
   ['qr/create.post.ts', 'qr-create', 'Failed to create QR code'],
@@ -65,6 +66,11 @@ async function harness(route, { error, failAt = 'query', denial, foreign = false
       findMany: async args => { checkpoint('query'); const r = owned(args); return r ? [r] : [] },
       findFirst: async args => { checkpoint('query'); return owned(args) },
     },
+    $queryRaw: async (strings, ...values) => {
+      assert.equal(values.at(-1), 'fictional-owner')
+      checkpoint(route.includes('/qr/') ? 'aggregate' : 'query')
+      return [{ totalScans: 0n, previousScans: 0n, activeQRCodes: 0n, buckets: [], topQRCodes: [] }]
+    },
     analytics: { findMany: async args => {
       assert.equal(args.where.qrCodeId, 'fictional-qr'); checkpoint('scans'); return []
     } },
@@ -108,6 +114,7 @@ async function harness(route, { error, failAt = 'query', denial, foreign = false
     } }),
     h3: mod(h3), zod: mod(zod), nanoid: mod({ nanoid: () => 'fixture8' }),
     '@prisma/client': mod({ Prisma }),
+    '~/server/utils/analytics-window.mjs': mod(analyticsWindow),
     '~/server/utils/qr-destination.mjs': mod(destination), '~/server/utils/qr-issuance.mjs': mod(issuance),
   }
   // Optional second pass executes the fresh Nitro-generated handler chunks.
@@ -195,7 +202,12 @@ for (const [route, event, message] of routes) {
       } else if (event === 'qr-list') {
         assert.equal(response.body.qrCodes.length, 1); assert.equal(response.body.stats.totalQRCodes, 1)
       } else if (event === 'qr-fetch') assert.equal(response.body.qrCode.id, 'fictional-qr')
-      else { assert.equal(response.body.stats.totalScans, 0); assert.ok(Array.isArray(response.body.series)) }
+      else {
+        assert.equal(response.body.stats.totalScans, 0); assert.ok(Array.isArray(response.body.series))
+        assert.equal(response.body.stats.uniqueVisitors, null)
+        assert.equal(response.body.stats.avgScansPerDay, null)
+        if (event === 'analytics-overview') assert.equal(response.body.stats.scanGrowth, null)
+      }
     } finally { await h.close() }
   })
   for (const denial of [401, 403, 503]) test(`${event}: admission ${denial} still refuses before database`, async () => {
@@ -224,7 +236,7 @@ for (const route of ['qr/[id].get.ts', 'analytics/qr/[id].get.ts']) test(`${rout
   const h = await harness(route, { foreign: true })
   try {
     const r = await h.invoke(); assert.equal(r.status, 404); assert.equal(r.body.statusMessage, 'QR code not found')
-    assert.equal(h.calls.includes('scans'), false); assert.deepEqual(h.logs, []); noCanaries(h, r)
+    assert.equal(h.calls.includes('scans'), false); assert.equal(h.calls.includes('aggregate'), false); assert.deepEqual(h.logs, []); noCanaries(h, r)
   } finally { await h.close() }
 })
 test('qr-create: direct success preserves exact content and creates no mapping', async () => {
